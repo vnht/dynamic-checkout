@@ -10,9 +10,35 @@ export type ShopperScenario =
   | 'new_to_au'
   | 'senior_saved_card'
   | 'vip_repeat'
-  | 'card_friction';
+  | 'card_friction'
+  | 'usd_card'
+  | 'usd_afterpay'
+  | 'usd_paypal'
+  | 'usd_applepay'
+  | 'usd_googlepay'
+  | 'usd_bank'
+  | 'usd_guest'
+  | 'id_dana'
+  | 'id_qris'
+  | 'id_card'
+  | 'id_guest';
 
-export type PaymentMethod = 'payto' | 'card' | 'afterpay' | 'payid';
+export type CheckoutCurrency = 'AUD' | 'USD' | 'IDR';
+
+export type CheckoutMarket = 'Australia' | 'United States' | 'Indonesia';
+
+export type PaymentMethod =
+  | 'payto'
+  | 'card'
+  | 'afterpay'
+  | 'klarna'
+  | 'payid'
+  | 'paybybank'
+  | 'paypal'
+  | 'applepay'
+  | 'googlepay'
+  | 'qris'
+  | 'dana';
 
 export type PaymentStatus =
   | 'idle'
@@ -25,7 +51,7 @@ export type PaymentStatus =
   | 'timed_out'
   | 'mismatched';
 
-export type AppScreen = 'cart' | 'checkout' | 'payment' | 'confirmation';
+export type AppScreen = 'checkout' | 'payment' | 'confirmation';
 
 export type CheckoutMode = 'standard' | 'cashback';
 
@@ -57,6 +83,8 @@ export interface PaymentOption {
   /** Shown on recommended method when checkout mode is cashback. */
   cashbackLabel?: string;
   cashbackReason?: string;
+  /** Demo-only capability, e.g. Card AFT. Not a shopper-facing method name. */
+  capabilityNote?: string;
 }
 
 export interface CartLineItem {
@@ -65,7 +93,8 @@ export interface CartLineItem {
   variant: string;
   quantity: number;
   unitPrice: number;
-  imageTone: 'headphones' | 'keyboard';
+  imageSrc: string;
+  imageAlt: string;
 }
 
 export interface ContactDetails {
@@ -105,6 +134,7 @@ export interface OrderReceipt {
   estimatedDelivery: string;
   shopperName?: string;
   afterpayFirstPayment?: number;
+  cashbackApplied?: number;
 }
 
 export interface DemoInsight {

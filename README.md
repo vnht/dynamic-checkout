@@ -19,10 +19,9 @@ Open the local URL, then use **Demo tools** (bottom-right) to switch among **12 
 
 ## Routes
 
-- `/cart` — electronics cart
-- `/checkout` — contact and delivery (merchant checkout)
-- `/pay` — Hello Clever payment gateway (ranked methods + authorisation)
-- `/order/confirmed` — receipt + collapsible demo insight
+- `/checkout`: contact, delivery, and order (starts here)
+- `/pay`: Hello Clever payment gateway (ranked methods + authorisation)
+- `/order/confirmed`: receipt + collapsible demo insight
 
 ## Demo cards
 

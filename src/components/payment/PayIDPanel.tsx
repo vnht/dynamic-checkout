@@ -12,7 +12,7 @@ import { PaymentStatusMessage } from '../PaymentStatusMessage';
 
 export function PayIDPanel() {
   const {
-    total,
+    amountDue,
     startPayId,
     payIdWaiting,
     simulatePayId,
@@ -56,7 +56,7 @@ export function PayIDPanel() {
         <span>Recipient name</span>
         <div className="copy-field__value">{MERCHANT_LEGAL}</div>
       </div>
-      <CopyField label="Amount" value={moneyAudLabel(total)} />
+      <CopyField label="Amount" value={moneyAudLabel(amountDue)} />
       <CopyField label="Description" value={ORDER_NUMBER} />
       <p className="field__hint">Expires in 10 minutes.</p>
 
@@ -65,7 +65,7 @@ export function PayIDPanel() {
         <li>Choose PayID and enter the PayID shown.</li>
         <li>Confirm the recipient is {MERCHANT_LEGAL}.</li>
         <li>
-          Enter exactly {moneyAudLabel(total)} and description {ORDER_NUMBER}.
+          Enter exactly {moneyAudLabel(amountDue)} and description {ORDER_NUMBER}.
         </li>
         <li>Return here while we confirm the payment.</li>
       </ol>

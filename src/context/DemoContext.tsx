@@ -9,7 +9,8 @@ import {
   type ReactNode,
 } from 'react';
 import { trackEvent, getAnalyticsEvents, clearAnalyticsEvents } from '../lib/analytics';
-import { afterpayInstalment, cartTotal, isCartEmpty } from '../lib/cart';
+import { cartTotal, isCartEmpty } from '../lib/cart';
+import { getCashbackBalance, hasCashbackBalance, isRecognisedShopper } from '../lib/cashback';
 import {
   CONSENT_TEXT_VERSION,
   DEFAULT_CART,
@@ -42,6 +43,7 @@ import type {
   AnalyticsEvent,
   CardDetails,
   CartLineItem,
+  CheckoutCurrency,
   CheckoutMode,
   ContactDetails,
   DeliveryDetails,
@@ -81,6 +83,13 @@ interface DemoContextValue {
   updateQuantity: (id: string, quantity: number) => void;
   removeItem: (id: string) => void;
   total: number;
+  amountDue: number;
+  cashbackBalance: number;
+  cashbackApplied: number;
+  applyCashback: boolean;
+  setApplyCashback: (apply: boolean) => void;
+  isRecognised: boolean;
+  currency: CheckoutCurrency;
   instalment: number;
   cartEmpty: boolean;
   contact: ContactDetails;
@@ -122,6 +131,12 @@ interface DemoContextValue {
   confirmAfterpay: () => void;
   cancelAfterpay: () => void;
   startPayTo: () => Promise<void>;
+  startPayByBank: () => Promise<void>;
+  startPayPal: () => Promise<void>;
+  startApplePay: () => Promise<void>;
+  startGooglePay: () => Promise<void>;
+  startQris: () => Promise<void>;
+  startDana: () => Promise<void>;
   simulatePayTo: (outcome: 'approved' | 'rejected' | 'timeout') => void;
   startPayId: () => boolean;
   simulatePayId: (outcome: 'received' | 'wrong_amount' | 'timeout' | 'check_again') => void;
@@ -175,18 +190,37 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const [analytics, setAnalytics] = useState<AnalyticsEvent[]>(() => getAnalyticsEvents());
   const [demoPanelOpen, setDemoPanelOpen] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [applyCashback, setApplyCashback] = useState(
+    () => loadCheckoutMode() === 'cashback' && hasCashbackBalance(initialScenario),
+  );
   const countdownRef = useRef<number | null>(null);
   const rankedOnce = useRef(false);
 
   const total = cartTotal(items);
-  const instalment = afterpayInstalment(items);
+  const isRecognised = isRecognisedShopper(scenario);
+  const currency = getProfile(scenario).currency ?? 'AUD';
+  const cashbackBalance = checkoutMode === 'cashback' ? getCashbackBalance(scenario) : 0;
+  const cashbackApplied =
+    checkoutMode === 'cashback' && isRecognised && applyCashback
+      ? Math.min(cashbackBalance, total)
+      : 0;
+  const amountDue = Math.round((total - cashbackApplied) * 100) / 100;
+  const instalment = Math.round((amountDue / 4) * 100) / 100;
   const cartEmpty = isCartEmpty(items);
 
   const recommendedMethod = defaultMethodForScenario(scenario);
 
   const paymentOptions = useMemo(
-    () => buildPaymentOptions(scenario, selectedMethod, overridden, total, checkoutMode),
-    [scenario, selectedMethod, overridden, total, checkoutMode],
+    () =>
+      buildPaymentOptions(
+        scenario,
+        selectedMethod,
+        overridden,
+        total,
+        checkoutMode,
+        amountDue,
+      ),
+    [scenario, selectedMethod, overridden, total, checkoutMode, amountDue],
   );
 
   const log = useCallback(
@@ -229,9 +263,12 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const setCheckoutMode = (mode: CheckoutMode) => {
     setCheckoutModeState(mode);
     if (mode === 'standard') {
+      setApplyCashback(false);
       setPromotionalConsent(null);
       localStorage.removeItem(STORAGE_KEYS.promotionalConsent);
       localStorage.removeItem(STORAGE_KEYS.agenticGrowthHandoff);
+    } else {
+      setApplyCashback(hasCashbackBalance(scenario));
     }
   };
 
@@ -321,6 +358,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     setReceipt(null);
     setInsight(null);
     rankedOnce.current = false;
+    setApplyCashback(checkoutMode === 'cashback' && hasCashbackBalance(next));
     log('scenario_changed', { method, status: next });
   };
 
@@ -366,8 +404,8 @@ export function DemoProvider({ children }: { children: ReactNode }) {
 
   const validateCheckoutForms = () => {
     const errors = {
-      ...validateContact(contact),
-      ...validateDelivery(delivery),
+      ...validateContact(contact, currency),
+      ...validateDelivery(delivery, currency),
     };
     setFieldErrors(errors);
     const first = firstErrorKey(errors);
@@ -393,15 +431,43 @@ export function DemoProvider({ children }: { children: ReactNode }) {
           ? 'Card network via Hello Clever Dynamic Checkout'
           : method === 'afterpay'
             ? 'Afterpay BNPL rail'
+            : method === 'klarna'
+              ? 'Klarna BNPL rail'
             : method === 'payto'
               ? 'PayTo agreement rail (NPP)'
-              : 'PayID push payment (NPP)',
+              : method === 'paybybank'
+                ? 'ACH / pay-by-bank rail'
+                : method === 'paypal'
+                  ? 'PayPal wallet rail'
+                  : method === 'applepay'
+                    ? 'Apple Pay wallet rail'
+                    : method === 'googlepay'
+                      ? 'Google Pay wallet rail'
+                  : method === 'qris'
+                    ? 'QRIS merchant-presented QR'
+                    : method === 'dana'
+                      ? 'DANA e-wallet rail'
+                      : 'PayID push payment (NPP)',
       settlementExpectation:
         method === 'afterpay'
           ? 'Merchant settlement per Afterpay agreement'
+          : method === 'klarna'
+            ? 'Merchant settlement per Klarna agreement'
           : method === 'card'
             ? 'Standard card settlement cycle'
-            : 'Near-real-time NPP settlement expectation',
+            : method === 'paypal'
+              ? 'PayPal merchant settlement'
+              : method === 'applepay'
+                ? 'Card network settlement via Apple Pay'
+                : method === 'googlepay'
+                  ? 'Card network settlement via Google Pay'
+              : method === 'paybybank'
+                ? 'ACH settlement cycle'
+                : method === 'qris'
+                  ? 'Near-real-time QRIS settlement'
+                  : method === 'dana'
+                    ? 'DANA merchant settlement'
+                    : 'Near-real-time NPP settlement expectation',
       reconciliationStatus: 'Matched · Demo order HC10482',
     };
   };
@@ -410,16 +476,19 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     const profile = getProfile(scenario);
     const first = delivery.firstName.trim();
     const name = first || profile.shortName;
+    const cashbackNote =
+      cashbackApplied > 0 ? ` · ${money(cashbackApplied, currency)} cashback applied` : '';
     const order: OrderReceipt = {
       orderNumber: ORDER_NUMBER,
       total,
       method,
-      methodDetail,
+      methodDetail: `${methodDetail}${cashbackNote}`,
       email: contact.email || profile.contact.email || 'shopper@example.com',
       delivery: { ...delivery },
       estimatedDelivery: ESTIMATED_DELIVERY,
       shopperName: name || undefined,
-      afterpayFirstPayment: method === 'afterpay' ? instalment : undefined,
+      afterpayFirstPayment: method === 'afterpay' || method === 'klarna' ? instalment : undefined,
+      cashbackApplied: cashbackApplied > 0 ? cashbackApplied : undefined,
     };
     setReceipt(order);
     setInsight(buildInsight(method, methodDetail));
@@ -432,7 +501,26 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     log('order_confirmed', { method, status: 'confirmed' });
   };
 
+  const resetPaymentSession = () => {
+    setPaymentStatus('idle');
+    setStatusMessage(null);
+    setAfterpayOpen(false);
+    setPayIdWaiting(false);
+    setPayToWaiting(false);
+    setCountdownSeconds(0);
+    setReceipt(null);
+    setInsight(null);
+    try {
+      sessionStorage.removeItem('dcal.receipt');
+    } catch {
+      /* ignore */
+    }
+  };
+
   const startCheckout = () => {
+    if (paymentStatus === 'succeeded' || receipt) {
+      resetPaymentSession();
+    }
     log('checkout_started', { status: 'started' });
   };
 
@@ -475,21 +563,29 @@ export function DemoProvider({ children }: { children: ReactNode }) {
 
   const startAfterpay = () => {
     if (!validateCheckoutForms()) return false;
+    const method = selectedMethod === 'klarna' ? 'klarna' : 'afterpay';
     setAfterpayOpen(true);
     setPaymentStatus('authorising');
-    log('payment_authorisation_started', { method: 'afterpay', status: 'authorising' });
+    log('payment_authorisation_started', { method, status: 'authorising' });
     return true;
   };
 
   const confirmAfterpay = () => {
-    completeOrder('afterpay', `Afterpay schedule confirmed · First payment ${money(instalment)}`);
+    const method = selectedMethod === 'klarna' ? 'klarna' : 'afterpay';
+    const label = method === 'klarna' ? 'Klarna' : 'Afterpay';
+    completeOrder(
+      method,
+      `${label} schedule confirmed · First payment ${money(instalment, currency)}`,
+    );
   };
 
   const cancelAfterpay = () => {
+    const method = selectedMethod === 'klarna' ? 'klarna' : 'afterpay';
+    const label = method === 'klarna' ? 'Klarna' : 'Afterpay';
     setAfterpayOpen(false);
     setPaymentStatus('cancelled');
-    setStatusMessage('Afterpay checkout was cancelled. No payment was taken.');
-    log('payment_authorisation_cancelled', { method: 'afterpay', status: 'cancelled' });
+    setStatusMessage(`${label} checkout was cancelled. No payment was taken.`);
+    log('payment_authorisation_cancelled', { method, status: 'cancelled' });
   };
 
   const startPayToSmart = async () => {
@@ -524,6 +620,65 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     setCountdownSeconds(120);
     setStatusMessage(null);
     log('payment_authorisation_started', { method: 'payto', status: 'waiting' });
+  };
+
+  const startPayByBank = async () => {
+    if (!validateCheckoutForms()) return;
+    const profile = getProfile(scenario);
+    setPaymentStatus('authorising');
+    setStatusMessage('Confirming with your bank...');
+    log('payment_authorisation_started', { method: 'paybybank', status: 'authorising' });
+    await delay(1200);
+    completeOrder(
+      'paybybank',
+      profile.payToReceiptDetail ?? 'Paid from linked bank account',
+    );
+  };
+
+  const startPayPal = async () => {
+    if (!validateCheckoutForms()) return;
+    setPaymentStatus('authorising');
+    setStatusMessage('Connecting to PayPal...');
+    log('payment_authorisation_started', { method: 'paypal', status: 'authorising' });
+    await delay(1100);
+    completeOrder('paypal', 'Paid with PayPal');
+  };
+
+  const startApplePay = async () => {
+    if (!validateCheckoutForms()) return;
+    setPaymentStatus('authorising');
+    setStatusMessage('Confirm with Face ID...');
+    log('payment_authorisation_started', { method: 'applepay', status: 'authorising' });
+    await delay(900);
+    completeOrder('applepay', 'Paid with Apple Pay');
+  };
+
+  const startGooglePay = async () => {
+    if (!validateCheckoutForms()) return;
+    setPaymentStatus('authorising');
+    setStatusMessage('Opening Google Pay...');
+    log('payment_authorisation_started', { method: 'googlepay', status: 'authorising' });
+    await delay(1000);
+    completeOrder('googlepay', 'Paid with Google Pay');
+  };
+
+  const startQris = async () => {
+    if (!validateCheckoutForms()) return;
+    setPaymentStatus('authorising');
+    setStatusMessage('Waiting for QRIS payment...');
+    log('payment_authorisation_started', { method: 'qris', status: 'authorising' });
+    await delay(1200);
+    completeOrder('qris', 'Paid via QRIS');
+  };
+
+  const startDana = async () => {
+    if (!validateCheckoutForms()) return;
+    const profile = getProfile(scenario);
+    setPaymentStatus('authorising');
+    setStatusMessage('Opening DANA...');
+    log('payment_authorisation_started', { method: 'dana', status: 'authorising' });
+    await delay(1100);
+    completeOrder('dana', profile.payToReceiptDetail ?? 'Paid with DANA');
   };
 
   const simulatePayTo = (outcome: 'approved' | 'rejected' | 'timeout') => {
@@ -594,20 +749,15 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     setFieldErrors({});
     setSelectedMethod(defaultMethodForScenario('recognised'));
     setOverridden(false);
-    setPaymentStatus('idle');
-    setStatusMessage(null);
     setCard({ ...profile.cardPrefill });
     setPayToIdType('mobile');
     setPayToIdentifier(profile.contact.mobile);
-    setAfterpayOpen(false);
-    setPayIdWaiting(false);
-    setPayToWaiting(false);
     setPayToForceNew(false);
-    setCountdownSeconds(0);
-    setReceipt(null);
-    setInsight(null);
+    resetPaymentSession();
     setAnalytics([]);
     setPromotionalConsent(null);
+    setCheckoutModeState('standard');
+    setApplyCashback(false);
     rankedOnce.current = false;
     clearCheckoutDraft();
     localStorage.removeItem(STORAGE_KEYS.promotionalConsent);
@@ -625,6 +775,13 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     updateQuantity,
     removeItem,
     total,
+    amountDue,
+    cashbackBalance,
+    cashbackApplied,
+    applyCashback,
+    setApplyCashback,
+    isRecognised,
+    currency,
     instalment,
     cartEmpty,
     contact,
@@ -666,6 +823,12 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     confirmAfterpay,
     cancelAfterpay,
     startPayTo: startPayToSmart,
+    startPayByBank,
+    startPayPal,
+    startApplePay,
+    startGooglePay,
+    startQris,
+    startDana,
     simulatePayTo,
     startPayId,
     simulatePayId,

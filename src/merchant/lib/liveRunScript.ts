@@ -35,7 +35,7 @@ export const LIVE_RUN_EVENTS: LiveRunEvent[] = [
     atMs: 3200,
     kind: 'skip',
     title: 'Skipped · Alex Nguyen',
-    detail: 'Settled payment but no promotional consent — standard checkout only.',
+    detail: 'Settled payment but no promotional consent. Standard checkout only.',
   },
   {
     id: 'lr-4',
@@ -66,7 +66,7 @@ export const LIVE_RUN_EVENTS: LiveRunEvent[] = [
     atMs: 11200,
     kind: 'skip',
     title: 'Skipped · corporate guest',
-    detail: 'Pending settlement — no Instant cashback until funds clear.',
+    detail: 'Pending settlement. No Instant cashback until funds clear.',
   },
   {
     id: 'lr-8',

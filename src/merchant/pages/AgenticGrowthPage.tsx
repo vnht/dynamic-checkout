@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { CleverAiMark } from '../../components/CleverAiMark';
 import { cashbackAmount, cashbackPercentLabel } from '../../lib/cashback';
 import { money, moneyAudLabel } from '../../lib/format';
 import { DecisionDrawer } from '../components/DecisionDrawer';
@@ -41,9 +42,13 @@ export function AgenticGrowthPage() {
           <>
             <div className="ga-chips">
               {insight.stats.map((stat) => (
-                <div key={stat.id} className="ga-chip">
+                <div
+                  key={stat.id}
+                  className={stat.id === 'risk' ? 'ga-chip ga-chip--hero' : 'ga-chip'}
+                >
                   <strong>{stat.value}</strong>
                   <span>{stat.label}</span>
+                  <em>{stat.detail}</em>
                 </div>
               ))}
             </div>
@@ -53,7 +58,7 @@ export function AgenticGrowthPage() {
               </div>
               <p className="mp-hint">
                 I’m only proposing Instant cashback for{' '}
-                <strong>{insight.eligibleSharePct}%</strong> of buyers —{' '}
+                <strong>{insight.eligibleSharePct}%</strong> of buyers.{' '}
                 <strong>{insight.ineligibleSharePct}%</strong> stay on standard checkout.
               </p>
             </div>
@@ -221,7 +226,7 @@ export function AgenticGrowthPage() {
               className="mp-btn mp-btn--primary"
               onClick={() => setPhase('charter_review')}
             >
-              Yes — draft Instant cashback setup
+              Yes, draft Instant cashback setup
             </button>
             <Link className="mp-btn" to="/merchant/agentic-growth/audience">
               Who would qualify?
@@ -244,14 +249,13 @@ export function AgenticGrowthPage() {
                     : undefined
               }
             >
-              Approve charter — start monitoring
+              Approve charter and start monitoring
             </button>
             <button type="button" className="mp-btn" onClick={() => setMessagePreviewOpen(true)}>
               Preview the offer I’d send
             </button>
-            {!isOwner && <p className="mp-hint">Switch role to Merchant Owner in Sim controls.</p>}
             {readinessBlocked && (
-              <p className="mp-hint">I’m blocked on budget authorisation — jump phase in Sim if needed.</p>
+              <p className="mp-hint">I’m blocked on budget authorisation.</p>
             )}
           </>
         );
@@ -361,7 +365,7 @@ export function AgenticGrowthPage() {
       </GrowthAgent>
 
       <p className="ga-footnote">
-        Clever Growth Agent · Circuit &amp; Co. Instant cashback · Not all customers eligible
+        <CleverAiMark size="sm" /> · Circuit &amp; Co. Instant cashback · Not all customers eligible
       </p>
 
       <DecisionDrawer />

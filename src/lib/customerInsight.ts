@@ -5,6 +5,7 @@ import type {
   PaymentMethod,
   ShopperScenario,
 } from '../types';
+import { cashbackMotiveLabel, getCashbackCase, type CashbackCase } from './cashbackCase';
 import { METHOD_LABELS } from './constants';
 import { money } from './format';
 import { getProfile } from './profiles';
@@ -24,6 +25,8 @@ export interface CustomerInsightModel {
   reasonDetail: string;
   methodScores: MethodScore[];
   outcomeNote: string;
+  cashbackCase: CashbackCase;
+  cashbackMotiveLabel: string;
 }
 
 export function buildCustomerInsight(
@@ -33,11 +36,12 @@ export function buildCustomerInsight(
   overridden: boolean,
 ): CustomerInsightModel {
   const profile = getProfile(scenario);
-  const instalment = money(cartTotal / 4);
+  const cashbackCase = getCashbackCase(scenario);
+  const instalment = money(cartTotal / 4, profile.currency ?? 'AUD');
   const recommendedMethod = profile.ranking[0].id;
 
   const methodScores = profile.methodScores.map((score) => {
-    if (score.id !== 'afterpay') return score;
+    if (score.id !== 'afterpay' && score.id !== 'klarna') return score;
     return {
       ...score,
       factors: score.factors.some((f) => f.includes('$') || f.includes('×'))
@@ -57,18 +61,28 @@ export function buildCustomerInsight(
         title: 'Identify shopper',
         detail:
           profile.group === 'Guest'
-            ? 'Guest path — limited or no returning profile signals.'
+            ? 'Guest path. Limited or no returning profile signals.'
             : 'Recognised profile matched from merchant / Clever identity signals.',
       },
       {
         id: 'eligibility',
         title: 'Filter eligible methods',
-        detail: 'Card, Afterpay, PayTo and PayID all remain selectable.',
+        detail:
+          (profile.currency ?? 'AUD') === 'USD'
+            ? 'Card, Klarna, Pay by bank and PayPal all remain selectable.'
+            : (profile.currency ?? 'AUD') === 'IDR'
+              ? 'Card, QRIS and DANA all remain selectable.'
+              : 'Card, Afterpay, PayTo and PayID all remain selectable.',
       },
       {
         id: 'rank',
         title: 'Rank methods',
         detail: profile.rankStepDetail,
+      },
+      {
+        id: 'cashback',
+        title: 'Score cashback case',
+        detail: `${cashbackMotiveLabel(cashbackCase.motive)}. ${cashbackCase.stakesLabel}.`,
       },
       {
         id: 'explain',
@@ -86,6 +100,8 @@ export function buildCustomerInsight(
       profile.group === 'Guest'
         ? 'No behavioural personalisation is claimed when history is absent. All methods stay selectable.'
         : 'Recommendation is guidance only. The shopper can override in one action without changing price.',
+    cashbackCase,
+    cashbackMotiveLabel: cashbackMotiveLabel(cashbackCase.motive),
   };
 
   if (overridden && selectedMethod !== recommendedMethod) {

@@ -1,11 +1,23 @@
-export const money = (amount: number): string =>
-  new Intl.NumberFormat('en-AU', {
-    style: 'currency',
-    currency: 'AUD',
-  }).format(amount);
+import type { CheckoutCurrency } from '../types';
 
-export const moneyAudLabel = (amount: number): string =>
-  `${money(amount)} AUD`;
+export const money = (amount: number, currency: CheckoutCurrency = 'AUD'): string => {
+  if (currency === 'IDR') {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      maximumFractionDigits: 0,
+    }).format(Math.round(amount * 15000));
+  }
+  return new Intl.NumberFormat(currency === 'USD' ? 'en-US' : 'en-AU', {
+    style: 'currency',
+    currency,
+  }).format(amount);
+};
+
+export const moneyLabel = (amount: number, currency: CheckoutCurrency = 'AUD'): string =>
+  currency === 'IDR' ? money(amount, currency) : `${money(amount, currency)} ${currency}`;
+
+export const moneyAudLabel = (amount: number): string => moneyLabel(amount, 'AUD');
 
 export const formatDateAu = (date: Date): string =>
   new Intl.DateTimeFormat('en-AU', {
@@ -39,6 +51,26 @@ export const formatMobileAu = (value: string): string => {
   if (digits.length <= 4) return digits;
   if (digits.length <= 7) return `${digits.slice(0, 4)} ${digits.slice(4)}`;
   return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+};
+
+export const formatMobileUs = (value: string): string => {
+  const digits = value.replace(/\D/g, '').slice(0, 10);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+};
+
+export const formatMobileId = (value: string): string => {
+  const digits = value.replace(/\D/g, '').slice(0, 13);
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 8) return `${digits.slice(0, 4)} ${digits.slice(4)}`;
+  return `${digits.slice(0, 4)} ${digits.slice(4, 8)} ${digits.slice(8)}`;
+};
+
+export const formatMobile = (value: string, currency: CheckoutCurrency = 'AUD'): string => {
+  if (currency === 'USD') return formatMobileUs(value);
+  if (currency === 'IDR') return formatMobileId(value);
+  return formatMobileAu(value);
 };
 
 export const maskCard = (last4 = '4242'): string => `Visa ending ${last4}`;

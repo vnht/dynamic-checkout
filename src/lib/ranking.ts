@@ -1,4 +1,5 @@
 import type { CheckoutMode, PaymentMethod, PaymentOption, ShopperScenario } from '../types';
+import { METHOD_LABELS } from './constants';
 import { cashbackBadgeLabel, cashbackOfferDetail } from './cashback';
 import { money } from './format';
 import { getCashbackReason, getProfile } from './profiles';
@@ -6,8 +7,15 @@ import { getCashbackReason, getProfile } from './profiles';
 const SUPPORTING: Record<PaymentMethod, string> = {
   card: 'Visa, Mastercard and American Express',
   afterpay: '4 payments of $169.50',
+  klarna: '4 payments of $169.50',
   payto: 'Pay directly from your bank account',
   payid: 'Complete payment in your banking app',
+  paybybank: 'Pay directly from your bank account',
+  paypal: 'Check out with your PayPal account',
+  applepay: 'Pay with Face ID or Touch ID',
+  googlepay: 'Pay with your Google account',
+  qris: 'Scan with any QRIS app',
+  dana: 'Pay from your DANA balance',
 };
 
 export function buildPaymentOptions(
@@ -16,9 +24,11 @@ export function buildPaymentOptions(
   overridden: boolean,
   cartTotal: number,
   checkoutMode: CheckoutMode = 'standard',
+  amountDue: number = cartTotal,
 ): PaymentOption[] {
   const profile = getProfile(scenario);
-  const instalmentText = `4 payments of ${money(cartTotal / 4)}`;
+  const currency = profile.currency ?? 'AUD';
+  const instalmentText = `4 payments of ${money(amountDue / 4, currency)}`;
   const recommendedId = profile.ranking[0]?.id;
   const cashbackReason = getCashbackReason(scenario);
 
@@ -38,15 +48,8 @@ export function buildPaymentOptions(
 
     return {
       id: def.id,
-      label:
-        def.id === 'card'
-          ? 'Card'
-          : def.id === 'afterpay'
-            ? 'Afterpay'
-            : def.id === 'payto'
-              ? 'PayTo'
-              : 'PayID',
-      supportingText: def.id === 'afterpay' ? instalmentText : SUPPORTING[def.id],
+      label: METHOD_LABELS[def.id],
+      supportingText: def.id === 'afterpay' || def.id === 'klarna' ? instalmentText : SUPPORTING[def.id],
       eligible: true,
       rank: index + 1,
       reason: def.reason,
@@ -54,8 +57,11 @@ export function buildPaymentOptions(
       detailLine: def.detailLine,
       selected: isSelected,
       badge,
-      cashbackLabel: showCashback ? cashbackBadgeLabel(cartTotal) : undefined,
-      cashbackReason: showCashback ? cashbackOfferDetail(cartTotal, cashbackReason) : undefined,
+      cashbackLabel: showCashback ? cashbackBadgeLabel(cartTotal, currency) : undefined,
+      cashbackReason: showCashback
+        ? cashbackOfferDetail(cartTotal, cashbackReason, currency)
+        : undefined,
+      capabilityNote: def.id === 'card' ? 'AFT supported' : undefined,
     };
   });
 }

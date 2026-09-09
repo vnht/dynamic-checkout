@@ -4,8 +4,13 @@ import type { PaymentMethod, PaymentOption } from '../types';
 import { PaymentMethodRow } from './PaymentMethodRow';
 import { AfterpayPanel } from './payment/AfterpayPanel';
 import { CardPaymentPanel } from './payment/CardPaymentPanel';
+import { PayByBankPanel } from './payment/PayByBankPanel';
 import { PayIDPanel } from './payment/PayIDPanel';
+import { DanaPanel } from './payment/DanaPanel';
+import { PayPalPanel } from './payment/PayPalPanel';
 import { PayToPanel } from './payment/PayToPanel';
+import { QrisPanel } from './payment/QrisPanel';
+import { WalletPayPanel } from './payment/WalletPayPanel';
 
 export function PaymentMethodList() {
   const { paymentOptions, selectMethod, selectedMethod, overridden } = useDemo();
@@ -44,11 +49,25 @@ export function PaymentMethodList() {
       case 'card':
         return <CardPaymentPanel />;
       case 'afterpay':
-        return <AfterpayPanel />;
+        return <AfterpayPanel brand="afterpay" />;
+      case 'klarna':
+        return <AfterpayPanel brand="klarna" />;
       case 'payto':
         return <PayToPanel />;
       case 'payid':
         return <PayIDPanel />;
+      case 'paybybank':
+        return <PayByBankPanel />;
+      case 'paypal':
+        return <PayPalPanel />;
+      case 'applepay':
+        return <WalletPayPanel brand="applepay" />;
+      case 'googlepay':
+        return <WalletPayPanel brand="googlepay" />;
+      case 'qris':
+        return <QrisPanel />;
+      case 'dana':
+        return <DanaPanel />;
     }
   };
 

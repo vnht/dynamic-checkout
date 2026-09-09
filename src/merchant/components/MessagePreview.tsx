@@ -38,17 +38,17 @@ export function MessagePreview() {
           style={{ marginTop: '0.85rem' }}
         >
           <div className="mp-email-preview__chrome">
-            From: Circuit &amp; Co. via Hello Clever · Subject: Instant cashback!!! 5% — A$33.90
-            waiting
+            From: Circuit &amp; Co. via Hello Clever · Subject: Instant cashback!!! A$33.90 is
+            already yours
           </div>
           <div className="mp-email-preview__body">
-            <strong>Instant cashback unlocked</strong>
+            <strong>A$33.90 just landed in your balance</strong>
             <p>
-              You earned <strong>A$33.90</strong> (5%) from your A$678 order. Use it on your next
-              Circuit &amp; Co. purchase within 14 days — accessories and selected audio.
+              Your A$678 payment succeeded. <strong>5% instant cashback</strong> was credited the
+              same second. No waiting. No next-order unlock. It&apos;s ready to spend now.
             </p>
             <button type="button" className="mp-btn mp-btn--primary mp-btn--sm">
-              Shop with Instant cashback
+              Spend it now
             </button>
           </div>
         </div>

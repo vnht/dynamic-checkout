@@ -1,12 +1,19 @@
 import { useDemo } from '../context/DemoContext';
-import { AU_STATES } from '../lib/constants';
+import { AU_STATES, ID_PROVINCES, US_STATES } from '../lib/constants';
 import { validateDelivery } from '../lib/validation';
 
 export function DeliveryForm() {
-  const { delivery, setDelivery, fieldErrors, setFieldErrors } = useDemo();
+  const { delivery, setDelivery, fieldErrors, setFieldErrors, currency } = useDemo();
+  const isAud = currency === 'AUD';
+  const isUsd = currency === 'USD';
+  const states = isUsd ? US_STATES : currency === 'IDR' ? ID_PROVINCES : AU_STATES;
+  const cityLabel = isAud ? 'Suburb' : 'City';
+  const regionLabel = currency === 'IDR' ? 'Province' : 'State';
+  const postcodeLabel = isUsd ? 'ZIP' : 'Postcode';
+  const postcodeMax = isAud ? 4 : 5;
 
   const onBlur = (name: keyof typeof delivery) => {
-    const errors = validateDelivery(delivery);
+    const errors = validateDelivery(delivery, currency);
     setFieldErrors({ ...fieldErrors, [name]: errors[name] });
   };
 
@@ -75,7 +82,7 @@ export function DeliveryForm() {
 
       <div className="form-grid form-grid--2">
         <div className="field">
-          <label htmlFor="suburb">Suburb</label>
+          <label htmlFor="suburb">{cityLabel}</label>
           <input
             className="input"
             id="suburb"
@@ -94,7 +101,7 @@ export function DeliveryForm() {
           )}
         </div>
         <div className="field">
-          <label htmlFor="state">State</label>
+          <label htmlFor="state">{regionLabel}</label>
           <select
             className="select"
             id="state"
@@ -107,7 +114,7 @@ export function DeliveryForm() {
             onBlur={() => onBlur('state')}
           >
             <option value="">Select</option>
-            {AU_STATES.map((state) => (
+            {states.map((state) => (
               <option key={state} value={state}>
                 {state}
               </option>
@@ -122,7 +129,7 @@ export function DeliveryForm() {
       </div>
 
       <div className="field" style={{ maxWidth: 180 }}>
-        <label htmlFor="postcode">Postcode</label>
+        <label htmlFor="postcode">{postcodeLabel}</label>
         <input
           className="input"
           id="postcode"
@@ -133,7 +140,10 @@ export function DeliveryForm() {
           aria-invalid={Boolean(fieldErrors.postcode)}
           aria-describedby={fieldErrors.postcode ? 'postcode-error' : undefined}
           onChange={(e) =>
-            setDelivery({ ...delivery, postcode: e.target.value.replace(/\D/g, '').slice(0, 4) })
+            setDelivery({
+              ...delivery,
+              postcode: e.target.value.replace(/\D/g, '').slice(0, postcodeMax),
+            })
           }
           onBlur={() => onBlur('postcode')}
         />

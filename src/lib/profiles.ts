@@ -1,5 +1,7 @@
 import type {
   CardDetails,
+  CheckoutCurrency,
+  CheckoutMarket,
   ContactDetails,
   DeliveryDetails,
   InsightSignal,
@@ -7,6 +9,7 @@ import type {
   PaymentMethod,
   ShopperScenario,
 } from '../types';
+import { getCashbackCase, type CashbackCase } from './cashbackCase';
 
 export interface RankedMethodDef {
   id: PaymentMethod;
@@ -21,6 +24,8 @@ export interface ShopperProfile {
   label: string;
   group: 'Recognised' | 'Guest';
   shortName: string;
+  currency?: CheckoutCurrency;
+  market?: CheckoutMarket;
   identityTitle: string;
   identitySummary: string;
   contact: ContactDetails;
@@ -36,8 +41,10 @@ export interface ShopperProfile {
   reasonHeadline: string;
   reasonDetail: string;
   methodScores: MethodScore[];
-  /** Why this shopper can qualify for Circuit & Co. second-purchase cashback (demo). */
+  /** Shopper-facing instant-credit line in cashback checkout mode. */
   cashbackReason?: string;
+  /** Merchant-facing why this shopper should be funded. */
+  cashbackCase?: CashbackCase;
 }
 
 function demoCard(nameOnCard: string, saveCard = false): CardDetails {
@@ -50,7 +57,11 @@ function demoCard(nameOnCard: string, saveCard = false): CardDetails {
   };
 }
 
-const baseContext = (amountNote: string, friction: string): InsightSignal[] => [
+const baseContext = (
+  amountNote: string,
+  friction: string,
+  market = 'Australia',
+): InsightSignal[] => [
   {
     id: 'vertical',
     label: 'Merchant vertical',
@@ -65,8 +76,8 @@ const baseContext = (amountNote: string, friction: string): InsightSignal[] => [
   },
   {
     id: 'market',
-    label: 'Market / currency',
-    value: 'Australia · AUD',
+    label: 'Market',
+    value: market,
     weight: 'high',
   },
   {
@@ -80,12 +91,12 @@ const baseContext = (amountNote: string, friction: string): InsightSignal[] => [
 export const SHOPPER_PROFILES: Record<ShopperScenario, ShopperProfile> = {
   recognised: {
     id: 'recognised',
-    label: 'Mia Chen — returning PayTo',
+    label: 'Mia Chen, returning PayTo',
     group: 'Recognised',
     shortName: 'Mia',
     identityTitle: 'Recognised shopper',
     identitySummary:
-      'Mia Chen is matched from a returning Circuit & Co. profile with an active PayTo agreement and a prior successful PayTo payment.',
+      'Mia Chen is matched from a returning Circuit & Co. profile with an active PayTo agreement. Last success 12 days ago. Cashback keeps the next order on that local rail, not card.',
     contact: {
       email: 'mia.chen@example.com',
       mobile: '0412 345 678',
@@ -135,12 +146,12 @@ export const SHOPPER_PROFILES: Record<ShopperScenario, ShopperProfile> = {
 
   guest: {
     id: 'guest',
-    label: 'Guest — no history',
+    label: 'Guest, no history',
     group: 'Guest',
     shortName: 'Alex',
     identityTitle: 'Guest shopper',
     identitySummary:
-      'No saved identity, mandate or prior method is available. Ranking uses cart context and lowest-friction familiar checkout for a high-value electronics order.',
+      'First Circuit & Co. order: no profile, no history, A$678 electronics. This is the 42% never-return cohort unless instant cashback gives Alex a reason to come back.',
     contact: {
       email: 'alex.guest@example.com',
       mobile: '0411 000 222',
@@ -192,12 +203,12 @@ export const SHOPPER_PROFILES: Record<ShopperScenario, ShopperProfile> = {
 
   student_afterpay: {
     id: 'student_afterpay',
-    label: 'Jordan Lee — student / BNPL',
+    label: 'Jordan Lee, student / BNPL',
     group: 'Recognised',
     shortName: 'Jordan',
     identityTitle: 'Recognised · student segment',
     identitySummary:
-      'Jordan Lee is a returning uni-age shopper who completed two prior Afterpay checkouts at Circuit & Co. Cashflow-sensitive signals favour Pay in 4.',
+      'Jordan Lee is the 18–34 metro Afterpay slice Circuit & Co. loses after headphone / accessory first orders. Two prior Pay in 4 successes. Cashback is how this becomes a second purchase.',
     contact: {
       email: 'jordan.lee@student.example.com',
       mobile: '0433 221 009',
@@ -255,12 +266,12 @@ export const SHOPPER_PROFILES: Record<ShopperScenario, ShopperProfile> = {
 
   payid_privacy: {
     id: 'payid_privacy',
-    label: 'Sam Okonkwo — PayID preferrer',
+    label: 'Sam Okonkwo, PayID preferrer',
     group: 'Recognised',
     shortName: 'Sam',
     identityTitle: 'Recognised · bank-push preferrer',
     identitySummary:
-      'Sam Okonkwo is recognised with no saved cards. Prior Circuit & Co. orders were completed by PayID push from a CommBank PayID.',
+      'Sam Okonkwo is recognised with no saved cards. Last success was PayID. Cashback rewards the local bank-push rail so the next checkout does not train him onto Visa.',
     contact: {
       email: 'sam.okonkwo@example.com',
       mobile: '0408 776 221',
@@ -308,12 +319,12 @@ export const SHOPPER_PROFILES: Record<ShopperScenario, ShopperProfile> = {
 
   corporate_card: {
     id: 'corporate_card',
-    label: 'Priya Nair — corporate buyer',
+    label: 'Priya Nair, corporate buyer',
     group: 'Recognised',
     shortName: 'Priya',
     identityTitle: 'Recognised · business buyer',
     identitySummary:
-      'Priya Nair buys for Northwind Labs. Delivery is to a Melbourne office and the last three payments used a saved corporate Visa.',
+      'Priya Nair buys for Northwind Labs on a saved corporate Visa. AP buyers rarely browse back. Instant cashback is the hook for the next requisition.',
     contact: {
       email: 'priya.nair@northwind.example',
       mobile: '0417 555 014',
@@ -362,12 +373,12 @@ export const SHOPPER_PROFILES: Record<ShopperScenario, ShopperProfile> = {
 
   mobile_guest: {
     id: 'mobile_guest',
-    label: 'Guest — mobile web first-time',
+    label: 'Guest, mobile web first-time',
     group: 'Guest',
     shortName: 'Riley',
     identityTitle: 'Guest · mobile session',
     identitySummary:
-      'First-time mobile web visitor with no account match. Device and session signals favour the fastest familiar checkout path.',
+      'First-time mobile web visitor with no account match. Highest one-and-done risk. Instant cashback is the only second-purchase signal that survives the tab close.',
     contact: {
       email: 'riley.mobile@example.com',
       mobile: '0488 321 654',
@@ -415,12 +426,12 @@ export const SHOPPER_PROFILES: Record<ShopperScenario, ShopperProfile> = {
 
   afterpay_regular: {
     id: 'afterpay_regular',
-    label: 'Aisha Rahman — Afterpay regular',
+    label: 'Aisha Rahman, Afterpay regular',
     group: 'Recognised',
     shortName: 'Aisha',
     identityTitle: 'Recognised · BNPL regular',
     identitySummary:
-      'Aisha Rahman is a frequent Circuit & Co. shopper with four Afterpay settlements in the last quarter and a healthy repayment record.',
+      'Aisha Rahman is a frequent Afterpay shopper with four settlements this quarter. Value-seekers churn after the gadget; cashback on Pay in 4 funds the accessory attach.',
     contact: {
       email: 'aisha.rahman@example.com',
       mobile: '0421 889 330',
@@ -473,12 +484,12 @@ export const SHOPPER_PROFILES: Record<ShopperScenario, ShopperProfile> = {
 
   regional_payto: {
     id: 'regional_payto',
-    label: 'Noah Blake — regional PayTo',
+    label: 'Noah Blake, regional PayTo',
     group: 'Recognised',
     shortName: 'Noah',
     identityTitle: 'Recognised · regional returning',
     identitySummary:
-      'Noah Blake shops from regional NSW with an active CBA PayTo agreement. Last payment used PayTo successfully from Dubbo.',
+      'Noah Blake shops from Dubbo with an active CBA PayTo agreement. Regional shoppers are expensive to reacquire. Cashback keeps him on the local rail.',
     contact: {
       email: 'noah.blake@example.com',
       mobile: '0499 120 884',
@@ -517,7 +528,7 @@ export const SHOPPER_PROFILES: Record<ShopperScenario, ShopperProfile> = {
     rankStepDetail: 'Active CBA PayTo agreement is the strongest low-friction signal.',
     reasonHeadline: 'PayTo leads from an active CBA agreement used last time',
     reasonDetail:
-      'Recognised regional shopper with a live PayTo mandate — bank debit is recommended without requiring card details.',
+      'Recognised regional shopper with a live PayTo mandate. Bank debit is recommended without requiring card details.',
     methodScores: [
       {
         id: 'payto',
@@ -533,12 +544,12 @@ export const SHOPPER_PROFILES: Record<ShopperScenario, ShopperProfile> = {
 
   new_to_au: {
     id: 'new_to_au',
-    label: 'Guest — new to Australia',
+    label: 'Guest, new to Australia',
     group: 'Guest',
     shortName: 'Wei',
     identityTitle: 'Guest · limited AU banking history',
     identitySummary:
-      'Guest checkout with no local payment history. Signals suggest a recent arrival — card remains the most universally familiar option.',
+      'Guest with no AU banking history. Card is familiar today; welcome cashback is how the second order and a future PayID stick.',
     contact: {
       email: 'wei.zhang@example.com',
       mobile: '0466 778 900',
@@ -590,12 +601,12 @@ export const SHOPPER_PROFILES: Record<ShopperScenario, ShopperProfile> = {
 
   senior_saved_card: {
     id: 'senior_saved_card',
-    label: 'Helen Brooks — saved card preferrer',
+    label: 'Helen Brooks, saved card preferrer',
     group: 'Recognised',
     shortName: 'Helen',
     identityTitle: 'Recognised · familiar-card preferrer',
     identitySummary:
-      'Helen Brooks is a long-time customer who consistently chooses her saved Visa and abandons bank-app authorisation flows.',
+      'Helen Brooks is a 6-year customer who finishes on a saved Visa and skips bank apps. Cashback keeps her on the rail she will complete. Losing her is worse than losing a guest.',
     contact: {
       email: 'helen.brooks@example.com',
       mobile: '0412 900 117',
@@ -638,7 +649,7 @@ export const SHOPPER_PROFILES: Record<ShopperScenario, ShopperProfile> = {
     rankStepDetail: 'Saved card preference and bank-app abandon history elevate card.',
     reasonHeadline: 'Card leads from a saved Visa and preference for familiar checkout',
     reasonDetail:
-      'Factual history shows Helen completes saved-card payments and rarely finishes bank-app flows — card is recommended without removing other methods.',
+      'Factual history shows Helen completes saved-card payments and rarely finishes bank-app flows. Card is recommended without removing other methods.',
     methodScores: [
       { id: 'card', label: 'Card', score: 96, factors: ['Saved Visa', 'Completion habit'] },
       { id: 'afterpay', label: 'Afterpay', score: 64, factors: ['Occasional use'] },
@@ -649,12 +660,12 @@ export const SHOPPER_PROFILES: Record<ShopperScenario, ShopperProfile> = {
 
   vip_repeat: {
     id: 'vip_repeat',
-    label: 'Lucas Martin — VIP repeat',
+    label: 'Lucas Martin, VIP repeat',
     group: 'Recognised',
     shortName: 'Lucas',
     identityTitle: 'Recognised · high-frequency VIP',
     identitySummary:
-      'Lucas Martin is a high-frequency buyer with an active PayTo agreement and very recent successful bank payment. Speed and reuse dominate ranking.',
+      'Lucas Martin is a high-frequency VIP with a fresh NAB PayTo success and a saved Amex. Cashback is insurance the cheapest local rail stays first.',
     contact: {
       email: 'lucas.martin@example.com',
       mobile: '0401 222 818',
@@ -704,12 +715,12 @@ export const SHOPPER_PROFILES: Record<ShopperScenario, ShopperProfile> = {
 
   card_friction: {
     id: 'card_friction',
-    label: 'Elena Rossi — recent card declines',
+    label: 'Elena Rossi, recent card declines',
     group: 'Recognised',
     shortName: 'Elena',
     identityTitle: 'Recognised · card friction',
     identitySummary:
-      'Elena Rossi is recognised but had two recent card declines on Circuit & Co. A successful PayTo payment followed — bank rails are ranked above card.',
+      'Elena Rossi had two card declines in 30 days, then recovered on Westpac PayTo. Cashback locks the rail that works so friction does not become churn.',
     contact: {
       email: 'elena.rossi@example.com',
       mobile: '0455 671 902',
@@ -766,34 +777,669 @@ export const SHOPPER_PROFILES: Record<ShopperScenario, ShopperProfile> = {
       { id: 'card', label: 'Card', score: 44, factors: ['Recent declines'] },
     ],
   },
+
+  usd_card: {
+    id: 'usd_card',
+    label: 'Taylor Brooks, returning card',
+    group: 'Recognised',
+    shortName: 'Taylor',
+    currency: 'USD',
+    identityTitle: 'Recognised · US returning',
+    identitySummary:
+      'Taylor Brooks is a returning US shopper with a saved Visa and no bank link. Instant cashback is the second-purchase hook, and how pay by bank can lead next time.',
+    contact: {
+      email: 'taylor.brooks@example.com',
+      mobile: '(212) 555-0148',
+      smsUpdates: true,
+    },
+    delivery: {
+      firstName: 'Taylor',
+      lastName: 'Brooks',
+      street: '210 Lafayette Street',
+      suburb: 'New York',
+      state: 'NY',
+      postcode: '10012',
+    },
+    cardPrefill: demoCard('Taylor Brooks', true),
+    hasPayToAgreement: false,
+    ranking: [
+      {
+        id: 'card',
+        reason: 'Recommended · Used last time',
+        reasonCode: 'used_last_time',
+        detailLine: 'Saved Visa ending 4242',
+        saved: true,
+      },
+      { id: 'klarna' },
+      { id: 'applepay' },
+      { id: 'googlepay' },
+      { id: 'paybybank' },
+      { id: 'paypal' },
+    ],
+    recognitionSignals: [
+      { id: 'email', label: 'Email match', value: 'taylor.brooks@example.com', weight: 'high' },
+      { id: 'device', label: 'Returning device', value: 'Known browser session', weight: 'medium' },
+      { id: 'card', label: 'Saved instrument', value: 'Visa ···4242', weight: 'high' },
+      { id: 'history', label: 'Last success', value: 'Card · 9 days ago', weight: 'high' },
+    ],
+    contextSignals: baseContext('$678.00', 'Reuse saved card', 'United States'),
+    rankStepDetail: 'Saved Visa and last-success card outrank Klarna and bank rails.',
+    reasonHeadline: 'Card leads because it was used successfully last time',
+    reasonDetail:
+      'Dynamic Checkout keeps every USD-eligible method visible, but leads with the saved Visa that completed the last order.',
+    methodScores: [
+      { id: 'card', label: 'Card', score: 95, factors: ['Saved Visa', 'Last success'] },
+      { id: 'klarna', label: 'Klarna', score: 74, factors: ['Eligible cart total'] },
+      { id: 'applepay', label: 'Apple Pay', score: 70, factors: ['Device wallet available'] },
+      { id: 'googlepay', label: 'Google Pay', score: 62, factors: ['Unused on this device'] },
+      { id: 'paybybank', label: 'Pay by bank', score: 66, factors: ['No linked account'] },
+      { id: 'paypal', label: 'PayPal', score: 58, factors: ['Unused recently'] },
+    ],
+  },
+
+  usd_afterpay: {
+    id: 'usd_afterpay',
+    label: 'Maya Ortiz, Klarna regular',
+    group: 'Recognised',
+    shortName: 'Maya',
+    currency: 'USD',
+    identityTitle: 'Recognised · US BNPL regular',
+    identitySummary:
+      'Maya Ortiz is a Los Angeles Klarna regular with three Pay in 4 orders this quarter. US value-seekers expand or disappear; cashback funds the attach item on the rail she trusts.',
+    contact: {
+      email: 'maya.ortiz@example.com',
+      mobile: '(323) 555-0190',
+      smsUpdates: true,
+    },
+    delivery: {
+      firstName: 'Maya',
+      lastName: 'Ortiz',
+      street: '818 N Spring Street',
+      suburb: 'Los Angeles',
+      state: 'CA',
+      postcode: '90012',
+    },
+    cardPrefill: demoCard('Maya Ortiz', true),
+    hasPayToAgreement: false,
+    ranking: [
+      {
+        id: 'klarna',
+        reason: 'Recommended · Used last time',
+        reasonCode: 'klarna_regular',
+      },
+      { id: 'card', detailLine: 'Saved Mastercard ending 5444', saved: true },
+      { id: 'applepay' },
+      { id: 'paypal' },
+      { id: 'googlepay' },
+      { id: 'paybybank' },
+    ],
+    recognitionSignals: [
+      { id: 'email', label: 'Email match', value: 'maya.ortiz@example.com', weight: 'high' },
+      { id: 'bnpl', label: 'BNPL cadence', value: '3 Klarna orders / quarter', weight: 'high' },
+      { id: 'standing', label: 'Repayment standing', value: 'Good', weight: 'high' },
+    ],
+    contextSignals: baseContext('$678.00', 'Prior Klarna success', 'United States'),
+    rankStepDetail: 'Klarna history and good standing outrank saved card for this cart.',
+    reasonHeadline: 'Klarna leads from recent Pay in 4 success',
+    reasonDetail:
+      'USD Dynamic Checkout still shows card, wallets and pay by bank. Klarna is first because Maya completed similar orders this way.',
+    methodScores: [
+      { id: 'klarna', label: 'Klarna', score: 94, factors: ['Repeat BNPL', 'Good standing'] },
+      { id: 'card', label: 'Card', score: 80, factors: ['Saved Mastercard'] },
+      { id: 'applepay', label: 'Apple Pay', score: 68, factors: ['Device wallet'] },
+      { id: 'paypal', label: 'PayPal', score: 61, factors: ['Wallet available'] },
+      { id: 'googlepay', label: 'Google Pay', score: 56, factors: ['Unused on this device'] },
+      { id: 'paybybank', label: 'Pay by bank', score: 52, factors: ['No linked account'] },
+    ],
+  },
+
+  usd_paypal: {
+    id: 'usd_paypal',
+    label: 'Chris Bell, PayPal preferrer',
+    group: 'Recognised',
+    shortName: 'Chris',
+    currency: 'USD',
+    identityTitle: 'Recognised · US wallet preferrer',
+    identitySummary:
+      'Chris Bell prefers PayPal so Circuit & Co. never stores a card. Cashback keeps him returning and opens a path to cheaper pay by bank next.',
+    contact: {
+      email: 'chris.bell@example.com',
+      mobile: '(206) 555-0172',
+      smsUpdates: false,
+    },
+    delivery: {
+      firstName: 'Chris',
+      lastName: 'Bell',
+      street: '1201 2nd Avenue',
+      suburb: 'Seattle',
+      state: 'WA',
+      postcode: '98101',
+    },
+    cardPrefill: demoCard('Chris Bell'),
+    hasPayToAgreement: false,
+    ranking: [
+      {
+        id: 'paypal',
+        reason: 'Recommended · Used last time',
+        reasonCode: 'paypal_preference',
+      },
+      { id: 'applepay' },
+      { id: 'googlepay' },
+      { id: 'paybybank' },
+      { id: 'card' },
+      { id: 'klarna' },
+    ],
+    recognitionSignals: [
+      { id: 'email', label: 'Email match', value: 'chris.bell@example.com', weight: 'high' },
+      { id: 'cards', label: 'Saved cards', value: 'None', weight: 'high' },
+      { id: 'history', label: 'Last success', value: 'PayPal · 16 days ago', weight: 'high' },
+    ],
+    contextSignals: baseContext('$678.00', 'Avoid card storage', 'United States'),
+    rankStepDetail: 'PayPal last success and no saved card outrank a new card entry.',
+    reasonHeadline: 'PayPal leads because no card is stored',
+    reasonDetail:
+      'Card stays selectable. PayPal is recommended from the last successful wallet payment and a stated preference not to store a card.',
+    methodScores: [
+      { id: 'paypal', label: 'PayPal', score: 93, factors: ['Last success', 'No card on file'] },
+      { id: 'applepay', label: 'Apple Pay', score: 74, factors: ['Device wallet'] },
+      { id: 'googlepay', label: 'Google Pay', score: 70, factors: ['Device wallet'] },
+      { id: 'paybybank', label: 'Pay by bank', score: 71, factors: ['Bank alternative'] },
+      { id: 'card', label: 'Card', score: 64, factors: ['Would require new entry'] },
+      { id: 'klarna', label: 'Klarna', score: 55, factors: ['No BNPL history'] },
+    ],
+  },
+
+  usd_applepay: {
+    id: 'usd_applepay',
+    label: 'Elena Cho, Apple Pay regular',
+    group: 'Recognised',
+    shortName: 'Elena',
+    currency: 'USD',
+    identityTitle: 'Recognised · US Apple Pay',
+    identitySummary:
+      'Elena Cho pays with Apple Pay so Circuit & Co. never stores a card. Cashback keeps Face ID checkout in front of a saved Visa next time.',
+    contact: {
+      email: 'elena.cho@example.com',
+      mobile: '(415) 555-0136',
+      smsUpdates: true,
+    },
+    delivery: {
+      firstName: 'Elena',
+      lastName: 'Cho',
+      street: '1 Market Street',
+      suburb: 'San Francisco',
+      state: 'CA',
+      postcode: '94105',
+    },
+    cardPrefill: demoCard('Elena Cho'),
+    hasPayToAgreement: false,
+    ranking: [
+      {
+        id: 'applepay',
+        reason: 'Recommended · Used last time',
+        reasonCode: 'applepay_preference',
+        detailLine: 'iPhone · Face ID',
+      },
+      { id: 'card' },
+      { id: 'googlepay' },
+      { id: 'paypal' },
+      { id: 'klarna' },
+      { id: 'paybybank' },
+    ],
+    recognitionSignals: [
+      { id: 'email', label: 'Email match', value: 'elena.cho@example.com', weight: 'high' },
+      { id: 'device', label: 'Device wallet', value: 'Apple Pay · Face ID', weight: 'high' },
+      { id: 'history', label: 'Last success', value: 'Apple Pay · 5 days ago', weight: 'high' },
+    ],
+    contextSignals: baseContext('$678.00', 'One-tap Face ID', 'United States'),
+    rankStepDetail: 'Recent Apple Pay success and an eligible iPhone wallet outrank a new card entry.',
+    reasonHeadline: 'Apple Pay leads from last Face ID checkout',
+    reasonDetail:
+      'Card, Google Pay, PayPal, Klarna and pay by bank stay selectable. Apple Pay is first because Elena completed the last order this way.',
+    methodScores: [
+      { id: 'applepay', label: 'Apple Pay', score: 96, factors: ['Last success', 'Face ID wallet'] },
+      { id: 'card', label: 'Card', score: 72, factors: ['Would require new entry'] },
+      { id: 'googlepay', label: 'Google Pay', score: 54, factors: ['Wrong device wallet'] },
+      { id: 'paypal', label: 'PayPal', score: 60, factors: ['Wallet fallback'] },
+      { id: 'klarna', label: 'Klarna', score: 58, factors: ['Eligible unused'] },
+      { id: 'paybybank', label: 'Pay by bank', score: 50, factors: ['No linked account'] },
+    ],
+  },
+
+  usd_googlepay: {
+    id: 'usd_googlepay',
+    label: 'Malik Rivers, Google Pay regular',
+    group: 'Recognised',
+    shortName: 'Malik',
+    currency: 'USD',
+    identityTitle: 'Recognised · US Google Pay',
+    identitySummary:
+      'Malik Rivers checks out with Google Pay on Android. Cashback rewards the wallet so the next order does not fall back to a typed card.',
+    contact: {
+      email: 'malik.rivers@example.com',
+      mobile: '(404) 555-0188',
+      smsUpdates: true,
+    },
+    delivery: {
+      firstName: 'Malik',
+      lastName: 'Rivers',
+      street: '265 Peachtree Center Avenue',
+      suburb: 'Atlanta',
+      state: 'GA',
+      postcode: '30303',
+    },
+    cardPrefill: demoCard('Malik Rivers'),
+    hasPayToAgreement: false,
+    ranking: [
+      {
+        id: 'googlepay',
+        reason: 'Recommended · Used last time',
+        reasonCode: 'googlepay_preference',
+        detailLine: 'Android · Google account',
+      },
+      { id: 'card' },
+      { id: 'applepay' },
+      { id: 'paypal' },
+      { id: 'klarna' },
+      { id: 'paybybank' },
+    ],
+    recognitionSignals: [
+      { id: 'email', label: 'Email match', value: 'malik.rivers@example.com', weight: 'high' },
+      { id: 'device', label: 'Device wallet', value: 'Google Pay · Android', weight: 'high' },
+      { id: 'history', label: 'Last success', value: 'Google Pay · 7 days ago', weight: 'high' },
+    ],
+    contextSignals: baseContext('$678.00', 'One-tap Google Pay', 'United States'),
+    rankStepDetail: 'Recent Google Pay success and a linked Android wallet outrank a new card entry.',
+    reasonHeadline: 'Google Pay leads from the last Android checkout',
+    reasonDetail:
+      'Card, Apple Pay, PayPal, Klarna and pay by bank stay selectable. Google Pay is first because Malik completed the last order this way.',
+    methodScores: [
+      { id: 'googlepay', label: 'Google Pay', score: 95, factors: ['Last success', 'Android wallet'] },
+      { id: 'card', label: 'Card', score: 73, factors: ['Would require new entry'] },
+      { id: 'applepay', label: 'Apple Pay', score: 52, factors: ['Wrong device wallet'] },
+      { id: 'paypal', label: 'PayPal', score: 63, factors: ['Wallet fallback'] },
+      { id: 'klarna', label: 'Klarna', score: 57, factors: ['Eligible unused'] },
+      { id: 'paybybank', label: 'Pay by bank', score: 49, factors: ['No linked account'] },
+    ],
+  },
+
+  usd_bank: {
+    id: 'usd_bank',
+    label: 'Samira Khan, returning bank pay',
+    group: 'Recognised',
+    shortName: 'Samira',
+    currency: 'USD',
+    identityTitle: 'Recognised · US bank-linked',
+    identitySummary:
+      'Samira Khan already pays from a linked Chase account. Cashback is how pay by bank stays ahead of the saved Visa.',
+    contact: {
+      email: 'samira.khan@example.com',
+      mobile: '(312) 555-0164',
+      smsUpdates: true,
+    },
+    delivery: {
+      firstName: 'Samira',
+      lastName: 'Khan',
+      street: '233 S Wacker Drive',
+      suburb: 'Chicago',
+      state: 'IL',
+      postcode: '60606',
+    },
+    cardPrefill: demoCard('Samira Khan', true),
+    hasPayToAgreement: true,
+    payToBankLabel: 'Chase checking ending 18',
+    payToReceiptDetail: 'Paid from Chase checking ending 18',
+    ranking: [
+      {
+        id: 'paybybank',
+        reason: 'Recommended · Used last time',
+        reasonCode: 'used_last_time',
+        detailLine: 'Chase checking ending 18',
+      },
+      { id: 'card', detailLine: 'Saved Visa ending 4242', saved: true },
+      { id: 'applepay' },
+      { id: 'googlepay' },
+      { id: 'paypal' },
+      { id: 'klarna' },
+    ],
+    recognitionSignals: [
+      { id: 'email', label: 'Email match', value: 'samira.khan@example.com', weight: 'high' },
+      { id: 'bank', label: 'Linked account', value: 'Chase ···18 · Active', weight: 'high' },
+      { id: 'history', label: 'Last success', value: 'Pay by bank · 8 days ago', weight: 'high' },
+    ],
+    contextSignals: baseContext('$678.00', 'Reuse linked bank account', 'United States'),
+    rankStepDetail: 'Linked Chase account and last-success bank debit outrank saved card.',
+    reasonHeadline: 'Pay by bank leads because the account is already linked',
+    reasonDetail:
+      'USD Dynamic Checkout keeps card, wallets and Klarna visible. Pay by bank is first because an approved ACH debit already exists.',
+    methodScores: [
+      { id: 'paybybank', label: 'Pay by bank', score: 96, factors: ['Linked account', 'Last success'] },
+      { id: 'card', label: 'Card', score: 81, factors: ['Saved Visa'] },
+      { id: 'applepay', label: 'Apple Pay', score: 68, factors: ['Device wallet'] },
+      { id: 'googlepay', label: 'Google Pay', score: 64, factors: ['Device wallet'] },
+      { id: 'paypal', label: 'PayPal', score: 63, factors: ['Wallet fallback'] },
+      { id: 'klarna', label: 'Klarna', score: 54, factors: ['Eligible unused'] },
+    ],
+  },
+
+  usd_guest: {
+    id: 'usd_guest',
+    label: 'Guest, US first visit',
+    group: 'Guest',
+    shortName: 'Jordan',
+    currency: 'USD',
+    identityTitle: 'Guest · US session',
+    identitySummary:
+      'No US profile match. First-visit electronics cart. 42% of first-timers never return. Instant cashback is the reason this is not a one-off.',
+    contact: {
+      email: 'jordan.guest@example.com',
+      mobile: '(512) 555-0107',
+      smsUpdates: false,
+    },
+    delivery: {
+      firstName: 'Jordan',
+      lastName: 'Reed',
+      street: '98 San Jacinto Blvd',
+      suburb: 'Austin',
+      state: 'TX',
+      postcode: '78701',
+    },
+    cardPrefill: demoCard('Jordan Reed'),
+    hasPayToAgreement: false,
+    ranking: [
+      {
+        id: 'card',
+        reason: 'Recommended · Quick checkout',
+        reasonCode: 'quick_checkout',
+      },
+      { id: 'applepay' },
+      { id: 'googlepay' },
+      { id: 'klarna' },
+      { id: 'paypal' },
+      { id: 'paybybank' },
+    ],
+    recognitionSignals: [
+      { id: 'profile', label: 'Customer profile', value: 'No match found', weight: 'high' },
+      { id: 'wallet', label: 'Saved methods', value: 'None', weight: 'high' },
+      { id: 'history', label: 'Payment history', value: 'Unavailable', weight: 'high' },
+    ],
+    contextSignals: baseContext('$678.00 · higher consideration', 'Lowest-friction familiar method', 'United States'),
+    rankStepDetail: 'With no history, card is the shortest guest path. All USD rails stay selectable.',
+    reasonHeadline: 'Card leads as the familiar guest path',
+    reasonDetail:
+      'No personalisation is claimed. Card is first because it is the lowest-friction method when nothing is on file.',
+    methodScores: [
+      { id: 'card', label: 'Card', score: 91, factors: ['Familiar guest path'] },
+      { id: 'applepay', label: 'Apple Pay', score: 80, factors: ['One-tap if available'] },
+      { id: 'googlepay', label: 'Google Pay', score: 78, factors: ['One-tap if available'] },
+      { id: 'klarna', label: 'Klarna', score: 76, factors: ['Split payments'] },
+      { id: 'paypal', label: 'PayPal', score: 70, factors: ['Wallet without card entry'] },
+      { id: 'paybybank', label: 'Pay by bank', score: 58, factors: ['New account link'] },
+    ],
+  },
+
+  id_dana: {
+    id: 'id_dana',
+    label: 'Siti Rahma, DANA regular',
+    group: 'Recognised',
+    shortName: 'Siti',
+    currency: 'IDR',
+    market: 'Indonesia',
+    identityTitle: 'Recognised · DANA wallet',
+    identitySummary:
+      'Siti Rahma is a returning Jakarta shopper with linked DANA. Cashback rewards the local wallet so the next checkout does not default to the saved Visa.',
+    contact: {
+      email: 'siti.rahma@example.com',
+      mobile: '0812 3456 7890',
+      smsUpdates: true,
+    },
+    delivery: {
+      firstName: 'Siti',
+      lastName: 'Rahma',
+      street: 'Jl. Jend. Sudirman Kav. 52-53',
+      suburb: 'Jakarta Selatan',
+      state: 'DKI Jakarta',
+      postcode: '12190',
+    },
+    cardPrefill: demoCard('Siti Rahma', true),
+    hasPayToAgreement: true,
+    payToBankLabel: 'DANA wallet ···8812',
+    payToReceiptDetail: 'Paid from DANA wallet ending 8812',
+    ranking: [
+      {
+        id: 'dana',
+        reason: 'Recommended · Used last time',
+        reasonCode: 'used_last_time',
+        detailLine: 'DANA wallet ···8812',
+      },
+      { id: 'qris' },
+      { id: 'card', detailLine: 'Saved Visa ending 4242', saved: true },
+    ],
+    recognitionSignals: [
+      { id: 'email', label: 'Email match', value: 'siti.rahma@example.com', weight: 'high' },
+      { id: 'wallet', label: 'Linked wallet', value: 'DANA ···8812 · Active', weight: 'high' },
+      { id: 'history', label: 'Last success', value: 'DANA · 6 days ago', weight: 'high' },
+    ],
+    contextSignals: baseContext('Rp10.170.000', 'Reuse linked DANA wallet', 'Indonesia'),
+    rankStepDetail: 'Linked DANA wallet and last-success e-wallet outrank QRIS and saved card.',
+    reasonHeadline: 'DANA leads because the wallet is already linked',
+    reasonDetail:
+      'Indonesian Dynamic Checkout keeps Card and QRIS visible. DANA is first because an approved wallet debit already exists.',
+    methodScores: [
+      { id: 'dana', label: 'DANA', score: 96, factors: ['Linked wallet', 'Last success'] },
+      { id: 'qris', label: 'QRIS', score: 78, factors: ['Any QRIS app'] },
+      { id: 'card', label: 'Card', score: 70, factors: ['Saved Visa'] },
+    ],
+  },
+
+  id_qris: {
+    id: 'id_qris',
+    label: 'Budi Santoso, QRIS regular',
+    group: 'Recognised',
+    shortName: 'Budi',
+    currency: 'IDR',
+    market: 'Indonesia',
+    identityTitle: 'Recognised · QRIS regular',
+    identitySummary:
+      'Budi Santoso completes Circuit & Co. by scanning QRIS, four times this quarter. Cashback pays him to stay on the local rail instead of a saved Mastercard.',
+    contact: {
+      email: 'budi.santoso@example.com',
+      mobile: '0813 8821 4400',
+      smsUpdates: true,
+    },
+    delivery: {
+      firstName: 'Budi',
+      lastName: 'Santoso',
+      street: 'Jl. Tunjungan 56',
+      suburb: 'Surabaya',
+      state: 'East Java',
+      postcode: '60275',
+    },
+    cardPrefill: demoCard('Budi Santoso', true),
+    hasPayToAgreement: false,
+    ranking: [
+      {
+        id: 'qris',
+        reason: 'Recommended · Used last time',
+        reasonCode: 'used_last_time',
+      },
+      { id: 'dana' },
+      { id: 'card', detailLine: 'Saved Mastercard ending 5444', saved: true },
+    ],
+    recognitionSignals: [
+      { id: 'email', label: 'Email match', value: 'budi.santoso@example.com', weight: 'high' },
+      { id: 'qris', label: 'QRIS cadence', value: '4 QRIS orders / quarter', weight: 'high' },
+      { id: 'history', label: 'Last success', value: 'QRIS · 11 days ago', weight: 'high' },
+    ],
+    contextSignals: baseContext('Rp10.170.000', 'Prior QRIS success', 'Indonesia'),
+    rankStepDetail: 'QRIS last success outranks DANA and saved card for this cart.',
+    reasonHeadline: 'QRIS leads from recent scan-to-pay success',
+    reasonDetail:
+      'Card and DANA stay selectable. QRIS is first because Budi completed similar orders by scanning the merchant QR.',
+    methodScores: [
+      { id: 'qris', label: 'QRIS', score: 94, factors: ['Last success', 'Familiar scan'] },
+      { id: 'dana', label: 'DANA', score: 72, factors: ['Wallet available'] },
+      { id: 'card', label: 'Card', score: 64, factors: ['Saved Mastercard'] },
+    ],
+  },
+
+  id_card: {
+    id: 'id_card',
+    label: 'Putri Ananda, saved card',
+    group: 'Recognised',
+    shortName: 'Putri',
+    currency: 'IDR',
+    market: 'Indonesia',
+    identityTitle: 'Recognised · ID returning',
+    identitySummary:
+      'Putri Ananda is card-first in Bandung. Instant cashback still credits on Visa, and is how QRIS or DANA can lead the return visit.',
+    contact: {
+      email: 'putri.ananda@example.com',
+      mobile: '0857 2144 9088',
+      smsUpdates: true,
+    },
+    delivery: {
+      firstName: 'Putri',
+      lastName: 'Ananda',
+      street: 'Jl. Braga 15',
+      suburb: 'Bandung',
+      state: 'West Java',
+      postcode: '40111',
+    },
+    cardPrefill: demoCard('Putri Ananda', true),
+    hasPayToAgreement: false,
+    ranking: [
+      {
+        id: 'card',
+        reason: 'Recommended · Used last time',
+        reasonCode: 'used_last_time',
+        detailLine: 'Saved Visa ending 4242',
+        saved: true,
+      },
+      { id: 'qris' },
+      { id: 'dana' },
+    ],
+    recognitionSignals: [
+      { id: 'email', label: 'Email match', value: 'putri.ananda@example.com', weight: 'high' },
+      { id: 'card', label: 'Saved instrument', value: 'Visa ···4242', weight: 'high' },
+      { id: 'history', label: 'Last success', value: 'Card · 9 days ago', weight: 'high' },
+    ],
+    contextSignals: baseContext('Rp10.170.000', 'Reuse saved card', 'Indonesia'),
+    rankStepDetail: 'Saved Visa and last-success card outrank QRIS and DANA.',
+    reasonHeadline: 'Card leads because it was used successfully last time',
+    reasonDetail:
+      'Dynamic Checkout keeps QRIS and DANA visible, but leads with the saved Visa that completed the last order.',
+    methodScores: [
+      { id: 'card', label: 'Card', score: 95, factors: ['Saved Visa', 'Last success'] },
+      { id: 'qris', label: 'QRIS', score: 74, factors: ['Eligible scan'] },
+      { id: 'dana', label: 'DANA', score: 61, factors: ['No linked wallet'] },
+    ],
+  },
+
+  id_guest: {
+    id: 'id_guest',
+    label: 'Guest, Indonesia first visit',
+    group: 'Guest',
+    shortName: 'Andi',
+    currency: 'IDR',
+    market: 'Indonesia',
+    identityTitle: 'Guest · Indonesia session',
+    identitySummary:
+      'No Indonesia profile match. QRIS is the familiar guest path. Cashback is how a Bali cart becomes a returning local payer, not a one-off.',
+    contact: {
+      email: 'andi.guest@example.com',
+      mobile: '0811 2233 4455',
+      smsUpdates: false,
+    },
+    delivery: {
+      firstName: 'Andi',
+      lastName: 'Wijaya',
+      street: 'Jl. Sunset Road 88',
+      suburb: 'Denpasar',
+      state: 'Bali',
+      postcode: '80361',
+    },
+    cardPrefill: demoCard('Andi Wijaya'),
+    hasPayToAgreement: false,
+    ranking: [
+      {
+        id: 'qris',
+        reason: 'Recommended · Quick checkout',
+        reasonCode: 'quick_checkout',
+      },
+      { id: 'dana' },
+      { id: 'card' },
+    ],
+    recognitionSignals: [
+      { id: 'profile', label: 'Customer profile', value: 'No match found', weight: 'high' },
+      { id: 'wallet', label: 'Saved methods', value: 'None', weight: 'high' },
+      { id: 'history', label: 'Payment history', value: 'Unavailable', weight: 'high' },
+    ],
+    contextSignals: baseContext(
+      'Rp10.170.000 · higher consideration',
+      'Lowest-friction familiar method',
+      'Indonesia',
+    ),
+    rankStepDetail: 'With no history, QRIS is the shortest guest path. Card and DANA stay selectable.',
+    reasonHeadline: 'QRIS leads as the familiar guest path',
+    reasonDetail:
+      'No personalisation is claimed. QRIS is first because scan-to-pay is the lowest-friction method when nothing is on file.',
+    methodScores: [
+      { id: 'qris', label: 'QRIS', score: 91, factors: ['Familiar guest path'] },
+      { id: 'dana', label: 'DANA', score: 76, factors: ['Wallet without card entry'] },
+      { id: 'card', label: 'Card', score: 68, factors: ['Would require new entry'] },
+    ],
+  },
 };
 
 /** Profile-specific why this shopper gets cashback eligibility in cashback checkout mode. */
 export const CASHBACK_REASONS: Record<ShopperScenario, string> = {
   recognised:
-    'Returning shopper with a settled Circuit & Co. first purchase (A$678) — qualifies for second-purchase rewards on this payment rail.',
+    'Returning shopper. This payment credits instant cashback to Mia’s balance the moment it settles.',
   guest:
-    'First settled Circuit & Co. payment can unlock second-purchase cashback; no prior history required.',
+    'First Circuit & Co. payment can credit instant cashback immediately; no prior history required.',
   student_afterpay:
-    'Settled Afterpay first order qualifies Jordan for accessory credit on a second purchase within 14 days.',
+    'Settled Afterpay payment credits Jordan instantly. No 14-day wait, no second-purchase unlock.',
   payid_privacy:
-    'Bank-push PayID settlement counts as a qualifying first purchase for Circuit & Co. cashback offers.',
+    'PayID settlement credits instant cashback the moment the transfer is received.',
   corporate_card:
-    'Corporate card settlement still qualifies the shopper profile for optional second-purchase email offers.',
+    'Corporate card settlement still credits instant cashback to the shopper profile on success.',
   mobile_guest:
-    'Mobile guest checkout: a settled payment seeds cashback eligibility even without a saved profile.',
+    'Mobile guest checkout: a successful payment credits instant cashback even without a saved profile.',
   afterpay_regular:
-    'Regular Afterpay buyer — settled instalment plan payment qualifies for second-purchase cashback.',
+    'Regular Afterpay buyer. Instalment confirmation credits instant cashback immediately.',
   regional_payto:
-    'Settled PayTo debit from a live mandate qualifies this regional shopper for second-purchase rewards.',
+    'Live PayTo debit credits instant cashback the moment the bank confirms.',
   new_to_au:
-    'New-to-AU shopper: first settled Circuit & Co. payment can unlock welcome second-purchase cashback.',
+    'New-to-AU shopper: first successful payment credits welcome cashback instantly.',
   senior_saved_card:
-    'Saved-card settlement qualifies Helen for a simple second-purchase reward without changing her preferred rail.',
+    'Saved-card success credits Helen instantly without changing her preferred rail.',
   vip_repeat:
-    'High-frequency buyer: each settled Circuit & Co. payment can refresh second-purchase cashback eligibility.',
+    'High-frequency buyer: each successful payment credits more instant cashback on the spot.',
   card_friction:
-    'Completing on the recommended card path settles the order and unlocks second-purchase cashback eligibility.',
+    'Paying on the recommended path settles the order and credits instant cashback immediately.',
+  usd_card:
+    'Returning US shopper. Card success credits instant cashback to the balance immediately.',
+  usd_afterpay:
+    'Klarna confirmation credits Maya instantly, ready to spend on this or a later US shop.',
+  usd_paypal:
+    'PayPal success credits instant cashback the moment the wallet payment completes.',
+  usd_applepay:
+    'Apple Pay success credits instant cashback the moment Face ID confirms.',
+  usd_googlepay:
+    'Google Pay success credits instant cashback the moment the wallet payment completes.',
+  usd_bank:
+    'Linked bank debit credits instant cashback as soon as the payment succeeds.',
+  usd_guest:
+    'US guest checkout: a successful payment credits instant cashback even without a saved profile.',
+  id_dana:
+    'DANA success credits instant cashback the moment the wallet debit completes.',
+  id_qris:
+    'QRIS confirmation credits Budi instantly. It is already in the balance, with no next-shop unlock.',
+  id_card:
+    'Returning Indonesia shopper. Card success credits instant cashback immediately.',
+  id_guest:
+    'Indonesia guest checkout: a successful payment credits instant cashback even without a saved profile.',
 };
 
 export const SCENARIO_IDS = Object.keys(SHOPPER_PROFILES) as ShopperScenario[];
@@ -810,11 +1456,21 @@ export function getCashbackReason(scenario: ShopperScenario): string {
   return CASHBACK_REASONS[scenario] ?? CASHBACK_REASONS.guest;
 }
 
+function marketForCurrency(currency: CheckoutCurrency): CheckoutMarket {
+  if (currency === 'USD') return 'United States';
+  if (currency === 'IDR') return 'Indonesia';
+  return 'Australia';
+}
+
 export function getProfile(scenario: ShopperScenario): ShopperProfile {
   const base = SHOPPER_PROFILES[scenario] ?? SHOPPER_PROFILES.guest;
+  const currency = base.currency ?? 'AUD';
   return {
     ...base,
+    currency,
+    market: base.market ?? marketForCurrency(currency),
     cashbackReason: getCashbackReason(base.id),
+    cashbackCase: getCashbackCase(base.id),
   };
 }
 

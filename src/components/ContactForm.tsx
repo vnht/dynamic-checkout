@@ -1,12 +1,20 @@
 import { useDemo } from '../context/DemoContext';
-import { formatMobileAu } from '../lib/format';
+import { formatMobile } from '../lib/format';
 import { validateContact } from '../lib/validation';
 
 export function ContactForm() {
-  const { contact, setContact, fieldErrors, setFieldErrors } = useDemo();
+  const { contact, setContact, fieldErrors, setFieldErrors, currency } = useDemo();
+  const mobileHint =
+    currency === 'USD'
+      ? 'US mobile · 10-digit number'
+      : currency === 'IDR'
+        ? 'Indonesian mobile · 08 format'
+        : 'Australian mobile · +61 format accepted';
+  const mobilePlaceholder =
+    currency === 'USD' ? '(212) 555-0148' : currency === 'IDR' ? '0812 3456 7890' : '0412 345 678';
 
   const onBlur = (name: 'email' | 'mobile') => {
-    const errors = validateContact(contact);
+    const errors = validateContact(contact, currency);
     setFieldErrors({ ...fieldErrors, [name]: errors[name] });
   };
 
@@ -35,7 +43,9 @@ export function ContactForm() {
 
       <div className="field">
         <label htmlFor="mobile">Mobile number</label>
-        <span className="field__hint">Australian mobile · +61 format accepted</span>
+        <span className="field__hint">
+          {mobileHint}
+        </span>
         <input
           className="input"
           id="mobile"
@@ -43,12 +53,15 @@ export function ContactForm() {
           type="tel"
           autoComplete="tel"
           inputMode="tel"
-          placeholder="0412 345 678"
+          placeholder={mobilePlaceholder}
           value={contact.mobile}
           aria-invalid={Boolean(fieldErrors.mobile)}
           aria-describedby={fieldErrors.mobile ? 'mobile-error' : undefined}
           onChange={(e) =>
-            setContact({ ...contact, mobile: formatMobileAu(e.target.value) })
+            setContact({
+              ...contact,
+              mobile: formatMobile(e.target.value, currency),
+            })
           }
           onBlur={() => onBlur('mobile')}
         />

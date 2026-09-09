@@ -5,16 +5,18 @@ import { ContactForm } from '../components/ContactForm';
 import { DeliveryForm } from '../components/DeliveryForm';
 import { OrderSummary } from '../components/OrderSummary';
 import { useDemo } from '../context/DemoContext';
-import { moneyAudLabel } from '../lib/format';
+import { moneyLabel } from '../lib/format';
 
 export function CheckoutPage() {
-  const { cartEmpty, total, validateCheckoutForms } = useDemo();
+  const { total, currency, validateCheckoutForms, startCheckout } = useDemo();
   const navigate = useNavigate();
   const [summaryOpen, setSummaryOpen] = useState(false);
 
   useEffect(() => {
-    if (cartEmpty) navigate('/cart');
-  }, [cartEmpty, navigate]);
+    startCheckout();
+    // once on mount for demo analytics
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const continueToPayment = () => {
     if (!validateCheckoutForms()) return;
@@ -24,9 +26,7 @@ export function CheckoutPage() {
   return (
     <div className="page">
       <nav className="breadcrumb" aria-label="Breadcrumb">
-        <Link to="/cart">Home</Link>
-        <span aria-hidden="true">/</span>
-        <Link to="/cart">Cart</Link>
+        <Link to="/">Customers</Link>
         <span aria-hidden="true">/</span>
         <span>Checkout</span>
       </nav>
@@ -39,7 +39,7 @@ export function CheckoutPage() {
         onClick={() => setSummaryOpen((v) => !v)}
       >
         <span>Order summary</span>
-        <span>{moneyAudLabel(total)}</span>
+        <span>{moneyLabel(total, currency)}</span>
       </button>
       {summaryOpen && (
         <div className="mobile-summary-panel">
@@ -55,29 +55,6 @@ export function CheckoutPage() {
           <CheckoutSection title="Delivery" id="delivery-heading">
             <DeliveryForm />
           </CheckoutSection>
-
-          <div className="card-surface checkout-section checkout-continue">
-            <h2 className="section-title">Payment</h2>
-            <p className="checkout-continue__copy">
-              Next you'll open the Hello Clever payment gateway to choose Card, PayID, PayTo or
-              Afterpay. Your cart and delivery details stay with Circuit & Co.
-            </p>
-            <div className="method-preview" aria-label="Accepted payment methods">
-              <span className="method-chip">Card</span>
-              <span className="method-chip">PayID</span>
-              <span className="method-chip">PayTo</span>
-              <span className="method-chip">Afterpay</span>
-            </div>
-            <button
-              type="button"
-              className="btn btn--primary btn--full"
-              style={{ marginTop: '1.25rem' }}
-              onClick={continueToPayment}
-            >
-              Continue to secure payment
-            </button>
-            <p className="trust-line">Encrypted payment page · Powered by Hello Clever</p>
-          </div>
         </div>
         <div className="sticky-summary desktop-only-summary">
           <OrderSummary
@@ -87,6 +64,15 @@ export function CheckoutPage() {
             showTrust
             showMethods
           />
+        </div>
+      </div>
+
+      <div className="sticky-bar sticky-bar--checkout">
+        <div className="sticky-bar__inner">
+          <strong>{moneyLabel(total, currency)}</strong>
+          <button type="button" className="btn btn--primary" onClick={continueToPayment}>
+            Continue to payment
+          </button>
         </div>
       </div>
     </div>

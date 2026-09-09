@@ -1,20 +1,21 @@
 import { Link } from 'react-router-dom';
 import { useDemo } from '../context/DemoContext';
-import { cashbackActivatedLabel, cashbackAmount } from '../lib/cashback';
-import { moneyAudLabel } from '../lib/format';
+import { cashbackActivatedLabel, cashbackAmount, cashbackPercentLabel } from '../lib/cashback';
+import { moneyLabel } from '../lib/format';
 import { DemoInsightPanel } from './DemoInsightPanel';
 import { PromotionalConsentCard } from './PromotionalConsentCard';
 
 export function OrderConfirmation() {
-  const { receipt, checkoutMode, promotionalConsent, recordPromotionalConsent } = useDemo();
+  const { receipt, checkoutMode, promotionalConsent, recordPromotionalConsent, currency } =
+    useDemo();
 
   if (!receipt) {
     return (
       <div className="confirm card-surface">
         <h1 className="page-title">No confirmed order</h1>
         <p>Complete checkout to see a confirmation.</p>
-        <Link className="btn btn--primary" to="/cart">
-          Back to cart
+        <Link className="btn btn--primary" to="/checkout">
+          Back to checkout
         </Link>
       </div>
     );
@@ -38,7 +39,13 @@ export function OrderConfirmation() {
             <dt>Order number</dt>
             <dd>{receipt.orderNumber}</dd>
             <dt>Total</dt>
-            <dd>{moneyAudLabel(receipt.total)}</dd>
+            <dd>{moneyLabel(receipt.total, currency)}</dd>
+            {receipt.cashbackApplied ? (
+              <>
+                <dt>Cashback</dt>
+                <dd>−{moneyLabel(receipt.cashbackApplied, currency)}</dd>
+              </>
+            ) : null}
             <dt>Payment</dt>
             <dd>{receipt.methodDetail}</dd>
             <dt>Delivery</dt>
@@ -55,21 +62,23 @@ export function OrderConfirmation() {
         </div>
 
         {checkoutMode === 'cashback' && (
-          <p className="cashback-eligibility" role="note">
-            <strong>{cashbackActivatedLabel(receipt.total)}</strong>
-            <br />
-            Nice one — {moneyAudLabel(cashbackAmount(receipt.total))} instant cashback is unlocked
-            for your next Circuit &amp; Co. shop (use within 14 days). Sign up below so we can send
-            the offer.
-          </p>
+          <div className="cashback-now" role="status">
+            <p className="cashback-now__kicker">Credited instantly</p>
+            <p className="cashback-now__amount">{moneyLabel(cashbackAmount(receipt.total), currency)}</p>
+            <p className="cashback-now__title">{cashbackActivatedLabel(receipt.total, currency)}</p>
+            <p className="cashback-now__copy">
+              The second your payment succeeded, {cashbackPercentLabel()} landed in your Hello Clever
+              balance. It&apos;s already there. Spend it whenever you want.
+            </p>
+          </div>
         )}
 
         <div className="confirm__actions">
           <button type="button" className="btn btn--primary">
             View order
           </button>
-          <Link to="/cart" className="btn btn--ghost">
-            Continue shopping
+          <Link to="/" className="btn btn--ghost">
+            Choose another customer
           </Link>
         </div>
       </div>

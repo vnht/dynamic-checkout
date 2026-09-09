@@ -25,22 +25,22 @@ export function agentTurnFor(phase: DemoPhase): AgentTurn {
     case 'opportunity_found':
       return {
         activity: 'detecting',
-        activityLabel: 'Detecting',
-        greeting: 'I spotted a repeat-purchase risk for Circuit & Co.',
+        activityLabel: 'Reading the numbers',
+        greeting: 'Last month Circuit & Co. left A$637k of second-order revenue on the table.',
         body: [
-          'First-time electronics buyers are churning hard — about 42% never come back within 45 days.',
-          'The pattern is strongest in 18–34 metro shoppers after headphone / accessory first orders.',
-          'Important: Instant cashback should not go to everyone. Only ~38% of recent buyers would qualify.',
+          '4,860 buyers in the last 30 days. 42% of first-timers never return within 45 days: 2,041 missing second purchases at A$312 AOV.',
+          'The leak is concentrated: 18–34 AU metro, headphone and accessory first orders, Afterpay-heavy value seekers. This is not a general loyalty problem.',
+          'Spray-and-pray would burn the budget. Only 1,840 buyers (38%) pass settlement, consent, and first-purchase gates. The other 62% stay on standard checkout.',
         ],
-        primaryHint: 'I can draft a targeted Instant cashback program next.',
+        primaryHint: 'This is the first step. I can draft a targeted Instant cashback program from this evidence now.',
       };
     case 'charter_review':
       return {
         activity: 'recommending',
         activityLabel: 'Recommending',
-        greeting: `I recommend a ${pct} Instant cashback program — eligible shoppers only.`,
+        greeting: `I recommend a ${pct} Instant cashback program for eligible shoppers only.`,
         body: [
-          `Reward: ${pct} of the settled first order (capped), redeemable within 14 days.`,
+          `Reward: ${pct} of the order, credited the instant payment succeeds. It is already in the shopper’s balance.`,
           'I’ll keep control traffic so we can measure true lift, and skip anyone without consent or a settled payment.',
           'Owner approval locks the charter. After that I’ll start Observation Mode.',
         ],
@@ -50,7 +50,7 @@ export function agentTurnFor(phase: DemoPhase): AgentTurn {
       return {
         activity: 'monitoring',
         activityLabel: 'Monitoring',
-        greeting: 'Observation Mode is live — I’m watching without changing offer volume.',
+        greeting: 'Observation Mode is live. I’m watching without changing offer volume.',
         body: [
           'Actual fixed allocation follows the locked charter.',
           'I’m also simulating a hypothetical adaptive mix so you can see what I’d do next.',
@@ -62,7 +62,7 @@ export function agentTurnFor(phase: DemoPhase): AgentTurn {
       return {
         activity: 'evaluating',
         activityLabel: 'Evaluating',
-        greeting: 'Evidence looks solid — ready for live adaptive if you want it.',
+        greeting: 'Evidence looks solid. Ready for live adaptive if you want it.',
         body: [
           'Offer volume, arm balance, delivery, and liability checks are within thresholds.',
           'If you approve, I’ll start shifting allocation within the 15% floor and 10pp daily move limits.',
@@ -73,7 +73,7 @@ export function agentTurnFor(phase: DemoPhase): AgentTurn {
       return {
         activity: 'running',
         activityLabel: 'Running',
-        greeting: 'Live run started — watch me qualify, skip, send, and redeem in real time.',
+        greeting: 'Live run started. Watch me qualify, skip, send, and redeem in real time.',
         body: [
           'I’ll stream Instant cashback activity as it happens: who qualifies, who I skip, and how liability moves.',
           'Adaptive share will nudge within floors. Ineligible shoppers never enter the reward ledger.',
@@ -89,13 +89,13 @@ export function agentTurnFor(phase: DemoPhase): AgentTurn {
           'A safety limit was breached. Existing offers stay immutable after send.',
           'Review the incident with me, then resume when you’re ready.',
         ],
-        primaryHint: 'Safety first — we can resume after Owner review.',
+        primaryHint: 'Safety first. We can resume after Owner review.',
       };
     case 'window_complete':
       return {
         activity: 'reporting',
         activityLabel: 'Reporting',
-        greeting: 'Window one is complete — here’s what I learned.',
+        greeting: 'Window one is complete. Here’s what I learned.',
         body: [
           'Adaptive Instant cashback beat fixed on second-purchase rate.',
           'Keeping 62% of buyers ineligible protected budget and avoided spray-and-pray rewards.',
@@ -106,12 +106,12 @@ export function agentTurnFor(phase: DemoPhase): AgentTurn {
       return {
         activity: 'reporting',
         activityLabel: 'Reporting',
-        greeting: 'Window two wrapped — merchant-specific learning is ready.',
+        greeting: 'Window two wrapped. Merchant-specific learning is ready.',
         body: [
           'Accessory-led Instant cashback messaging outperformed broad catalogue copy.',
           'I’ll keep eligibility tight unless you change the charter.',
         ],
-        primaryHint: 'Reset the demo anytime from Sim controls.',
+        primaryHint: 'Start over from insight anytime in Demo tools.',
       };
   }
 }

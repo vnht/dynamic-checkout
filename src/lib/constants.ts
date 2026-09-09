@@ -19,7 +19,8 @@ export const DEFAULT_CART: CartLineItem[] = [
     variant: 'Midnight',
     quantity: 1,
     unitPrice: 499,
-    imageTone: 'headphones',
+    imageSrc: '/products/nova-anc-headphones.jpg',
+    imageAlt: 'Nova ANC Headphones in Midnight',
   },
   {
     id: 'orbit-keyboard',
@@ -27,7 +28,8 @@ export const DEFAULT_CART: CartLineItem[] = [
     variant: 'Graphite, AU layout',
     quantity: 1,
     unitPrice: 179,
-    imageTone: 'keyboard',
+    imageSrc: '/products/orbit-mechanical-keyboard.jpg',
+    imageAlt: 'Orbit Mechanical Keyboard in Graphite',
   },
 ];
 
@@ -84,11 +86,28 @@ export const AFTERPAY_DATES = [
   { label: '23 Sep 2026', dateKey: '2026-09-23' },
 ] as const;
 
+export const US_STATES = [
+  'CA',
+  'IL',
+  'NY',
+  'TX',
+  'WA',
+] as const;
+
+export const ID_PROVINCES = ['DKI Jakarta', 'West Java', 'East Java', 'Bali'] as const;
+
 export const METHOD_LABELS: Record<PaymentMethod, string> = {
   card: 'Card',
   afterpay: 'Afterpay',
+  klarna: 'Klarna',
   payto: 'PayTo',
   payid: 'PayID',
+  paybybank: 'Pay by bank',
+  paypal: 'PayPal',
+  applepay: 'Apple Pay',
+  googlepay: 'Google Pay',
+  qris: 'QRIS',
+  dana: 'DANA',
 };
 
 export const STORAGE_KEYS = {
@@ -96,7 +115,7 @@ export const STORAGE_KEYS = {
   scenario: 'dcal.scenario',
   analytics: 'dcal.analytics',
   checkoutDraft: 'dcal.checkoutDraft',
-  checkoutMode: 'dcal.checkoutMode',
+  checkoutMode: 'dcal.dynamicCheckout',
   promotionalConsent: 'dcal.promotionalConsent',
   agenticGrowthHandoff: 'dcal.agenticGrowthHandoff',
 } as const;

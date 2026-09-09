@@ -63,4 +63,5 @@ export function resetDemoStorage() {
   clearCheckoutDraft();
   localStorage.removeItem(STORAGE_KEYS.scenario);
   localStorage.removeItem(STORAGE_KEYS.analytics);
+  localStorage.removeItem(STORAGE_KEYS.checkoutMode);
 }

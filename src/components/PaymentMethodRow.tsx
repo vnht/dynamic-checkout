@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { PaymentOption } from '../types';
+import { PaymentMethodLogo } from './PaymentMethodLogo';
 import { RecommendationBadge } from './RecommendationBadge';
 
 interface Props {
@@ -8,13 +9,6 @@ interface Props {
   onSelect: () => void;
   children?: ReactNode;
 }
-
-const MARK_LABEL: Record<string, string> = {
-  card: 'CARD',
-  afterpay: 'A',
-  payto: 'PayTo',
-  payid: 'PayID',
-};
 
 export function PaymentMethodRow({ option, expanded, onSelect, children }: Props) {
   const panelId = `payment-panel-${option.id}`;
@@ -38,9 +32,7 @@ export function PaymentMethodRow({ option, expanded, onSelect, children }: Props
           }
         }}
       >
-        <span className={`payment-row__mark payment-row__mark--${option.id}`} aria-hidden="true">
-          {MARK_LABEL[option.id]}
-        </span>
+        <PaymentMethodLogo method={option.id} />
         <span>
           <span className="payment-row__title" id={labelId}>
             {option.label}
@@ -51,6 +43,9 @@ export function PaymentMethodRow({ option, expanded, onSelect, children }: Props
             )}
             {option.cashbackLabel && (
               <span className="badge badge--cashback">{option.cashbackLabel}</span>
+            )}
+            {option.capabilityNote && (
+              <span className="badge badge--demo">{option.capabilityNote}</span>
             )}
           </span>
           <p className="payment-row__support">

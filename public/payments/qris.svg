@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" role="img" aria-label="QRIS">
+  <rect width="40" height="40" rx="8" fill="#fff"/>
+  <rect x="4.5" y="4.5" width="12.2" height="12.2" rx="1.6" fill="#0054A6"/>
+  <rect x="7" y="7" width="7.2" height="7.2" rx="0.7" fill="#fff"/>
+  <rect x="8.9" y="8.9" width="3.4" height="3.4" fill="#0054A6"/>
+  <rect x="23.3" y="4.5" width="12.2" height="12.2" rx="1.6" fill="#E31E24"/>
+  <rect x="25.8" y="7" width="7.2" height="7.2" rx="0.7" fill="#fff"/>
+  <rect x="27.7" y="8.9" width="3.4" height="3.4" fill="#E31E24"/>
+  <rect x="4.5" y="23.3" width="12.2" height="12.2" rx="1.6" fill="#009639"/>
+  <rect x="7" y="25.8" width="7.2" height="7.2" rx="0.7" fill="#fff"/>
+  <rect x="8.9" y="27.7" width="3.4" height="3.4" fill="#009639"/>
+  <rect x="18.8" y="5.6" width="2.4" height="2.4" fill="#0054A6"/>
+  <rect x="18.8" y="10.4" width="2.4" height="2.4" fill="#E31E24"/>
+  <rect x="18.8" y="15.2" width="2.4" height="2.4" fill="#F5A800"/>
+  <rect x="5.6" y="18.8" width="2.4" height="2.4" fill="#009639"/>
+  <rect x="10.4" y="18.8" width="2.4" height="2.4" fill="#F5A800"/>
+  <rect x="15.2" y="18.8" width="2.4" height="2.4" fill="#0054A6"/>
+  <rect x="18.8" y="18.8" width="2.4" height="2.4" fill="#E31E24"/>
+  <rect x="23.6" y="18.8" width="2.4" height="2.4" fill="#009639"/>
+  <rect x="28.4" y="18.8" width="2.4" height="2.4" fill="#F5A800"/>
+  <rect x="33.2" y="18.8" width="2.3" height="2.4" fill="#0054A6"/>
+  <rect x="18.8" y="23.6" width="2.4" height="2.4" fill="#F5A800"/>
+  <rect x="18.8" y="28.4" width="2.4" height="2.4" fill="#0054A6"/>
+  <rect x="18.8" y="33.2" width="2.4" height="2.3" fill="#E31E24"/>
+  <rect x="23.6" y="23.6" width="4.4" height="4.4" fill="#F5A800"/>
+  <rect x="29.6" y="23.6" width="4.8" height="2.2" fill="#E31E24"/>
+  <rect x="23.6" y="29.6" width="2.2" height="4.8" fill="#0054A6"/>
+  <rect x="27.2" y="29.6" width="3.4" height="3.4" fill="#009639"/>
+  <rect x="31.6" y="27.2" width="2.8" height="2.8" fill="#F5A800"/>
+  <rect x="31.6" y="31.6" width="3.9" height="3.9" rx="0.6" fill="#E31E24"/>
+</svg>

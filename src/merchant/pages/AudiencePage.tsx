@@ -23,7 +23,7 @@ export function AudiencePage() {
           activityLabel: 'Qualifying',
           greeting: `I’m filtering who can get ${cashbackPercentLabel()} Instant cashback.`,
           body: [
-            'Not every customer is eligible — consent, settlement, and window rules have to clear first.',
+            'Not every customer is eligible. Consent, settlement, and window rules have to clear first.',
             `Right now that’s about ${insight.eligibleSharePct}% of recent buyers. The rest keep standard checkout.`,
           ],
           primaryHint: 'Tap an example and I’ll walk the gates.',

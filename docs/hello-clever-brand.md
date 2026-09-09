@@ -56,7 +56,7 @@ Mark: blue disc with cyan + white geometric “C” chevrons. Wordmark: lowercas
 - **Surfaces:** white content areas; deep navy hero with 3D globe / globe UI
 - **Motion:** subtle transitions; interactive product demos (payment rails, Clever AI chat)
 - **Shadow:** soft layered elevation (`--pixel-shadow`)
-- **Tone:** clean fintech — high contrast, generous space, global payment imagery
+- **Tone:** clean fintech. High contrast, generous space, global payment imagery
 
 ## Suggested CSS starter
 

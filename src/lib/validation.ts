@@ -1,7 +1,16 @@
-import type { CardDetails, ContactDetails, DeliveryDetails, FieldErrors } from '../types';
+import type {
+  CardDetails,
+  CheckoutCurrency,
+  ContactDetails,
+  DeliveryDetails,
+  FieldErrors,
+} from '../types';
 import { DECLINE_CARD, SUCCESS_CARD } from './constants';
 
-export function validateContact(contact: ContactDetails): FieldErrors {
+export function validateContact(
+  contact: ContactDetails,
+  currency: CheckoutCurrency = 'AUD',
+): FieldErrors {
   const errors: FieldErrors = {};
   if (!contact.email.trim()) {
     errors.email = 'Enter your email address so we can send your receipt.';
@@ -10,7 +19,19 @@ export function validateContact(contact: ContactDetails): FieldErrors {
   }
 
   const mobileDigits = contact.mobile.replace(/\D/g, '');
-  if (!mobileDigits) {
+  if (currency === 'USD') {
+    if (!mobileDigits) {
+      errors.mobile = 'Enter your mobile number.';
+    } else if (mobileDigits.length !== 10) {
+      errors.mobile = 'Use a 10-digit US mobile number.';
+    }
+  } else if (currency === 'IDR') {
+    if (!mobileDigits) {
+      errors.mobile = 'Enter your mobile number.';
+    } else if (!/^08\d{8,11}$/.test(mobileDigits)) {
+      errors.mobile = 'Use an Indonesian mobile number starting with 08.';
+    }
+  } else if (!mobileDigits) {
     errors.mobile = 'Enter your Australian mobile number.';
   } else if (!/^0?4\d{8}$/.test(mobileDigits) && !/^61?4\d{8}$/.test(mobileDigits)) {
     errors.mobile = 'Use an Australian mobile number starting with 04.';
@@ -19,14 +40,34 @@ export function validateContact(contact: ContactDetails): FieldErrors {
   return errors;
 }
 
-export function validateDelivery(delivery: DeliveryDetails): FieldErrors {
+export function validateDelivery(
+  delivery: DeliveryDetails,
+  currency: CheckoutCurrency = 'AUD',
+): FieldErrors {
   const errors: FieldErrors = {};
   if (!delivery.firstName.trim()) errors.firstName = 'Enter your first name.';
   if (!delivery.lastName.trim()) errors.lastName = 'Enter your last name.';
   if (!delivery.street.trim()) errors.street = 'Enter your street address.';
-  if (!delivery.suburb.trim()) errors.suburb = 'Enter your suburb.';
-  if (!delivery.state) errors.state = 'Select a state or territory.';
-  if (!/^\d{4}$/.test(delivery.postcode.trim())) {
+  if (!delivery.suburb.trim()) {
+    errors.suburb = currency === 'AUD' ? 'Enter your suburb.' : 'Enter your city.';
+  }
+  if (!delivery.state) {
+    errors.state =
+      currency === 'IDR'
+        ? 'Select a province.'
+        : currency === 'USD'
+          ? 'Select a state.'
+          : 'Select a state or territory.';
+  }
+  if (currency === 'USD') {
+    if (!/^\d{5}$/.test(delivery.postcode.trim())) {
+      errors.postcode = 'Enter a 5-digit ZIP code.';
+    }
+  } else if (currency === 'IDR') {
+    if (!/^\d{5}$/.test(delivery.postcode.trim())) {
+      errors.postcode = 'Enter a 5-digit postcode.';
+    }
+  } else if (!/^\d{4}$/.test(delivery.postcode.trim())) {
     errors.postcode = 'Enter a 4-digit Australian postcode.';
   }
   return errors;

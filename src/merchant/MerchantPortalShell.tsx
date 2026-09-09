@@ -1,21 +1,28 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { CircuitCoMark } from '../components/CircuitCoMark';
+import { useDemo } from '../context/DemoContext';
 import { AgenticGrowthProvider, useAgenticGrowth } from './context/AgenticGrowthContext';
-import { MerchantSimDrawer } from './components/MerchantSimDrawer';
+import { MerchantAgenticSetup } from './components/MerchantAgenticSetup';
 import './merchant.css';
 
 function ShellInner() {
-  const { role } = useAgenticGrowth();
+  const { checkoutMode } = useDemo();
+  const { setPhase } = useAgenticGrowth();
+  const withAgentic = checkoutMode === 'cashback';
 
   return (
     <div className="merchant-shell">
       <aside className="merchant-nav" aria-label="Merchant navigation">
         <div className="merchant-nav__brand">
-          <strong>Hello Clever</strong>
-          <span>Merchant portal</span>
+          <CircuitCoMark />
+          <div>
+            <strong>Circuit &amp; Co.</strong>
+            <span>Merchant Owner</span>
+          </div>
         </div>
         <ul className="merchant-nav__list">
           <li>
-            <NavLink to="/merchant" end>
+            <NavLink to="/merchant" end onClick={() => setPhase('opportunity_found')}>
               Overview
             </NavLink>
           </li>
@@ -41,21 +48,11 @@ function ShellInner() {
       </aside>
 
       <div className="merchant-main">
-        <header className="merchant-topbar">
-          <div className="merchant-topbar__workspace">
-            Workspace · <strong>Circuit &amp; Co.</strong>
-          </div>
-          <div className="merchant-topbar__workspace">
-            Role:{' '}
-            <strong>{role === 'merchant_owner' ? 'Merchant Owner' : 'Growth Manager'}</strong>
-          </div>
-        </header>
         <div className="merchant-content">
-          <Outlet />
+          {withAgentic ? <Outlet /> : <MerchantAgenticSetup />}
         </div>
       </div>
 
-      <MerchantSimDrawer />
     </div>
   );
 }

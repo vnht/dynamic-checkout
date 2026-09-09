@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import { STORAGE_KEYS } from '../../lib/constants';
-import { buildFixture, DEMO_PHASES, PHASE_STORAGE_KEY, ROLE_STORAGE_KEY } from '../fixtures/phases';
+import { buildFixture, DEMO_PHASES, PHASE_STORAGE_KEY } from '../fixtures/phases';
 import type {
   AgenticGrowthFixture,
   AuditEvent,
@@ -18,7 +18,6 @@ import type {
 
 interface AgenticGrowthContextValue {
   role: MerchantRole;
-  setRole: (role: MerchantRole) => void;
   phase: DemoPhase;
   setPhase: (phase: DemoPhase) => void;
   fixture: AgenticGrowthFixture;
@@ -60,16 +59,6 @@ const DEFAULT_SIM: SimFlags = {
   lateReversal: false,
 };
 
-function loadPhase(): DemoPhase {
-  const raw = localStorage.getItem(PHASE_STORAGE_KEY);
-  const match = DEMO_PHASES.find((p) => p.id === raw);
-  return match?.id ?? 'opportunity_found';
-}
-
-function loadRole(): MerchantRole {
-  const raw = localStorage.getItem(ROLE_STORAGE_KEY);
-  return raw === 'merchant_owner' ? 'merchant_owner' : 'growth_manager';
-}
 
 function loadHandoff(): Record<string, unknown> | null {
   try {
@@ -83,8 +72,8 @@ function loadHandoff(): Record<string, unknown> | null {
 const AgenticGrowthContext = createContext<AgenticGrowthContextValue | null>(null);
 
 export function AgenticGrowthProvider({ children }: { children: ReactNode }) {
-  const [role, setRoleState] = useState<MerchantRole>(() => loadRole());
-  const [phase, setPhaseState] = useState<DemoPhase>(() => loadPhase());
+  const role: MerchantRole = 'merchant_owner';
+  const [phase, setPhaseState] = useState<DemoPhase>('opportunity_found');
   const [sim, setSim] = useState<SimFlags>(DEFAULT_SIM);
   const [simDrawerOpen, setSimDrawerOpen] = useState(false);
   const [selectedDecisionId, setSelectedDecisionId] = useState<string | null>(null);
@@ -173,11 +162,6 @@ export function AgenticGrowthProvider({ children }: { children: ReactNode }) {
     return next;
   }, [base, overrides, localAudit, sim]);
 
-  const setRole = (next: MerchantRole) => {
-    setRoleState(next);
-    localStorage.setItem(ROLE_STORAGE_KEY, next);
-  };
-
   const setPhase = (next: DemoPhase) => {
     setPhaseState(next);
     localStorage.setItem(PHASE_STORAGE_KEY, next);
@@ -212,7 +196,7 @@ export function AgenticGrowthProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const isOwner = role === 'merchant_owner';
+  const isOwner = true;
   const canApproveCharter =
     isOwner && (phase === 'charter_review' || phase === 'opportunity_found') && !fixture.charter.approvedByOwner;
   const canApproveLive =
@@ -287,7 +271,6 @@ export function AgenticGrowthProvider({ children }: { children: ReactNode }) {
 
   const value: AgenticGrowthContextValue = {
     role,
-    setRole,
     phase,
     setPhase,
     fixture,

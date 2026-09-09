@@ -10,7 +10,7 @@ import { BankAuthorisationWaiting } from './BankAuthorisationWaiting';
 export function PayToPanel() {
   const {
     scenario,
-    total,
+    amountDue,
     startPayTo,
     payToWaiting,
     simulatePayTo,
@@ -37,7 +37,7 @@ export function PayToPanel() {
       <div id="payment-panel-payto" role="region" aria-label="PayTo authorisation">
         <BankAuthorisationWaiting
           merchant={MERCHANT_NAME}
-          amount={moneyAudLabel(total)}
+          amount={moneyAudLabel(amountDue)}
           purpose="Order payment"
           frequency="Once"
         />
@@ -108,13 +108,13 @@ export function PayToPanel() {
             disabled={loading}
             onClick={() => void startPayTo()}
           >
-            {loading ? 'Confirming with your bank…' : `Pay ${moneyAudLabel(total)} with PayTo`}
+            {loading ? 'Confirming with your bank…' : `Pay ${moneyAudLabel(amountDue)} with PayTo`}
           </button>
         </>
       ) : (
         <>
           <p style={{ marginTop: 0 }}>
-            {MERCHANT_NAME} will create a one-off PayTo agreement for {moneyAudLabel(total)}. Review
+            {MERCHANT_NAME} will create a one-off PayTo agreement for {moneyAudLabel(amountDue)}. Review
             and authorise it in your banking app before any money is taken.
           </p>
           <p className="field__hint">

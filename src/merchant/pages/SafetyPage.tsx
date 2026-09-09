@@ -95,9 +95,6 @@ export function SafetyPage() {
             </button>
           )}
         </div>
-        {!isOwner && (
-          <p className="mp-hint">Switch to Merchant Owner in Sim controls to approve stops/resumes.</p>
-        )}
         <p className="mp-hint">
           Merchant stop: {fixture.merchantStop ? 'active' : 'off'} · Hello Clever stop:{' '}
           {fixture.helloCleverStop ? 'active' : 'off'}

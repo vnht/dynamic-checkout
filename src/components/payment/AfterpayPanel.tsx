@@ -1,13 +1,15 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { useDemo } from '../../context/DemoContext';
 import { AFTERPAY_DATES } from '../../lib/constants';
-import { money, moneyAudLabel } from '../../lib/format';
+import { money, moneyLabel } from '../../lib/format';
 import { PaymentStatusMessage } from '../PaymentStatusMessage';
 
-export function AfterpayPanel() {
+export function AfterpayPanel({ brand = 'afterpay' }: { brand?: 'afterpay' | 'klarna' }) {
+  const name = brand === 'klarna' ? 'Klarna' : 'Afterpay';
   const {
     instalment,
-    total,
+    amountDue,
+    currency,
     startAfterpay,
     afterpayOpen,
     confirmAfterpay,
@@ -68,22 +70,22 @@ export function AfterpayPanel() {
   }, [afterpayOpen, cancelAfterpay]);
 
   return (
-    <div id="payment-panel-afterpay" role="region" aria-label="Afterpay payment details">
+    <div id={`payment-panel-${brand}`} role="region" aria-label={`${name} payment details`}>
       <p style={{ marginTop: 0 }}>
         <strong>Pay in 4</strong> interest-free payments.
       </p>
       <p className="field__hint">Instalment amount is a demo calculation.</p>
 
-      <div className="schedule" aria-label="Afterpay payment schedule">
+      <div className="schedule" aria-label={`${name} payment schedule`}>
         {AFTERPAY_DATES.map((item) => (
           <div className="schedule__item" key={item.dateKey}>
             <span>{item.label}</span>
-            <strong>{money(instalment)}</strong>
+            <strong>{money(instalment, currency)}</strong>
           </div>
         ))}
       </div>
 
-      <p>You'll complete your payment securely with Afterpay.</p>
+      <p>You'll complete your payment securely with {name}.</p>
       <button type="button" className="btn--link" onClick={() => setTermsOpen(true)}>
         View terms
       </button>
@@ -99,7 +101,7 @@ export function AfterpayPanel() {
         style={{ marginTop: '0.75rem' }}
         onClick={() => startAfterpay()}
       >
-        Continue with Afterpay
+        Continue with {name}
       </button>
 
       {termsOpen && (
@@ -108,23 +110,23 @@ export function AfterpayPanel() {
             className="modal"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="afterpay-terms-title"
+            aria-labelledby={`${brand}-terms-title`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal__header">
-              <h3 id="afterpay-terms-title" style={{ margin: 0 }}>
-                Afterpay terms (demo)
+              <h3 id={`${brand}-terms-title`} style={{ margin: 0 }}>
+                {name} terms (demo)
               </h3>
               <button type="button" className="btn--link" onClick={() => setTermsOpen(false)}>
                 Close
               </button>
             </div>
             <p>
-              This is a plain-language demo modal. In production, Afterpay supplies merchant order
+              This is a plain-language demo modal. In production, {name} supplies merchant order
               limits, customer eligibility and the full terms experience.
             </p>
             <p>
-              You agree to pay four equal instalments. Late fees may apply under Afterpay's real
+              You agree to pay four equal instalments. Late fees may apply under {name}'s real
               terms. No real agreement is created in this demo.
             </p>
           </div>
@@ -143,7 +145,7 @@ export function AfterpayPanel() {
             <p className="modal__eyebrow">Demo simulation</p>
             <div className="modal__header">
               <h3 id={titleId} style={{ margin: 0 }}>
-                Afterpay
+                {name}
               </h3>
               <button type="button" className="btn--link" onClick={cancelAfterpay}>
                 Cancel and return
@@ -175,13 +177,13 @@ export function AfterpayPanel() {
                   {AFTERPAY_DATES.map((item) => (
                     <div className="schedule__item" key={item.dateKey}>
                       <span>{item.label}</span>
-                      <strong>{money(instalment)}</strong>
+                      <strong>{money(instalment, currency)}</strong>
                     </div>
                   ))}
                 </div>
                 <div className="order-summary__total">
                   <span>Order total</span>
-                  <span>{moneyAudLabel(total)}</span>
+                  <span>{moneyLabel(amountDue, currency)}</span>
                 </div>
                 <button
                   type="button"

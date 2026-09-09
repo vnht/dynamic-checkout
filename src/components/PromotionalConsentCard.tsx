@@ -33,8 +33,8 @@ export function PromotionalConsentCard({ consent, onOptIn, onDecline }: Promotio
     <div className="consent-card card-surface">
       <h2 className="section-title">Get {MERCHANT_NAME} offers</h2>
       <p>
-        Optionally hear about second-purchase rewards and Circuit &amp; Co. offers by email. Off by
-        default — you choose.
+        Optionally get a ping when more instant cashback drops, plus Circuit &amp; Co. offers. Off by
+        default. You choose.
       </p>
       <p className="consent-card__meta">
         Hello Clever sends these emails for Circuit &amp; Co. See{' '}

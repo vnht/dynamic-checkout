@@ -8,7 +8,7 @@ import { liabilityBalances, sharesRespectFloor, sharesSumTo100 } from './validat
 
 const BASE_CHARTER: MerchantCharter = {
   id: 'CHARTER-CIR-2026-W1',
-  goal: 'Instant cashback 5% — win second purchase within 14 days',
+  goal: 'Instant cashback 5% to win a second purchase within 14 days',
   rewardRatePercent: 5,
   windowDays: 14,
   budgetAud: 12000,
@@ -166,7 +166,7 @@ export function buildFixture(phase: DemoPhase, overrides?: Partial<AgenticGrowth
       {
         id: 'consent',
         label: 'Email consent coverage',
-        detail: 'Only consented shoppers can receive Instant cashback offers — not the full base.',
+        detail: 'Only consented shoppers can receive Instant cashback offers, not the full base.',
         status: phase === 'opportunity_found' ? 'warn' : 'pass',
       },
       {
@@ -184,12 +184,18 @@ export function buildFixture(phase: DemoPhase, overrides?: Partial<AgenticGrowth
     ],
     charter,
     insight: {
-      headline: 'Repeat-purchase churn is concentrated in first-time electronics buyers',
+      headline: 'A$637k of second-order revenue is walking out of last month’s Circuit & Co. cohort',
       summary:
-        '42% of Circuit & Co. first-time buyers do not return within 45 days. Churn is highest among accessory browsers and value-seeking Afterpay shoppers — not every customer should get Instant cashback.',
+        '4,860 buyers in 30 days. 42% of first-time electronics buyers never return within 45 days: 2,041 missing orders at A$312 AOV. Churn concentrates in 18–34 metro accessory / Afterpay shoppers. Instant cashback should hit that slice, not the full base.',
       recommendation:
         'Set up a 5% Instant cashback program for a qualified subset only: settled first purchase, promotional consent, and in-window eligibility. Keep control traffic to measure lift.',
       stats: [
+        {
+          id: 'risk',
+          label: 'Second-order revenue at risk',
+          value: 'A$637k',
+          detail: '4,860 buyers × 42% non-return × A$312 AOV, last 30 days only. A year of the same leak is north of A$7.6M.',
+        },
         {
           id: 'churn',
           label: '45-day non-return',
@@ -197,22 +203,16 @@ export function buildFixture(phase: DemoPhase, overrides?: Partial<AgenticGrowth
           detail: 'First-time buyers who never make a second purchase',
         },
         {
-          id: 'demo',
-          label: 'At-risk demographic',
-          value: '18–34 · AU metro',
-          detail: 'Highest churn after headphone / accessory first orders',
+          id: 'lost',
+          label: 'Missing second purchases',
+          value: '2,041',
+          detail: 'From this 30-day cohort if the 42% pattern holds',
         },
         {
           id: 'eligible',
-          label: 'Eligible for cashback',
+          label: 'Eligible for Instant cashback',
           value: '38%',
-          detail: 'Of last-30-day buyers — not the full customer base',
-        },
-        {
-          id: 'aov',
-          label: 'Eligible AOV',
-          value: 'A$312',
-          detail: '5% Instant cashback ≈ A$15.60 average reward',
+          detail: '1,840 of 4,860 last-30-day buyers. This is the only slice that should be rewarded',
         },
       ],
       eligibilityRules: [
@@ -233,7 +233,7 @@ export function buildFixture(phase: DemoPhase, overrides?: Partial<AgenticGrowth
         size: 1280,
         qualified: 842,
         avgFirstOrderAud: 412,
-        description: 'Settled buyers with accessory affinity — ~66% eligible for 5% Instant cashback.',
+        description: 'Settled buyers with accessory affinity. About 66% are eligible for 5% Instant cashback.',
       },
       {
         id: 'cart_abandon_recover',
@@ -249,7 +249,7 @@ export function buildFixture(phase: DemoPhase, overrides?: Partial<AgenticGrowth
         size: 740,
         qualified: 318,
         avgFirstOrderAud: 198,
-        description: 'Price-sensitive Afterpay mix — only ~43% pass eligibility rules.',
+        description: 'Price-sensitive Afterpay mix. Only about 43% pass eligibility rules.',
       },
     ],
     qualificationExample: {
@@ -274,7 +274,7 @@ export function buildFixture(phase: DemoPhase, overrides?: Partial<AgenticGrowth
       emailConsent: false,
       paymentSettled: true,
       reasons: [
-        'Payment settled — passes settlement check',
+        'Payment settled. Passes settlement check',
         'Missing promotional email consent',
         'Guest profile with no Instant cashback opt-in',
         'Would see standard checkout (no cashback callout) until consent exists',
@@ -405,7 +405,7 @@ export function buildFixture(phase: DemoPhase, overrides?: Partial<AgenticGrowth
       phase === 'second_window_complete'
         ? [
             'Window two: 5% Instant cashback on accessory attach outperformed broader catalogue messaging.',
-            'Ineligible shoppers (no consent) stayed on standard checkout — kept CAC from inflating.',
+            'Ineligible shoppers (no consent) stayed on standard checkout, which kept CAC from inflating.',
             'Adaptive kept control near 18% for measurement while respecting the 15% floor.',
           ]
         : phase === 'window_complete'
