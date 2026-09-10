@@ -41,7 +41,7 @@ export function PasswordGate({ children }: { children: ReactNode }) {
         body: JSON.stringify({ password }),
       });
       if (!res.ok) {
-        setError('That password is not right.');
+        setError('Incorrect password');
         setState('locked');
         return;
       }
