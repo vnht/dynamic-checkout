@@ -40,7 +40,7 @@ function createMiddleware(password: string): Connect.NextHandleFunction {
       let submitted = '';
       try {
         const raw = await readBody(req);
-        submitted = String(JSON.parse(raw).password ?? '');
+        submitted = String(JSON.parse(raw).password ?? '').trim();
       } catch {
         submitted = '';
       }

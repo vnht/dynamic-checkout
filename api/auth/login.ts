@@ -1,21 +1,45 @@
-import { gateCookie, gateFromEnv, json, safeEqual } from '../_lib/gate';
+import { cookieToken, envPassword, gateCookie, safeEqual } from '../../server/gateAuth';
 
-export async function POST(request: Request) {
-  let submitted = '';
-  try {
-    const body = (await request.json()) as { password?: string };
-    submitted = String(body.password ?? '');
-  } catch {
-    submitted = '';
-  }
+type VercelReq = { method?: string; body?: unknown };
+type VercelRes = {
+  setHeader: (name: string, value: string) => void;
+  status: (code: number) => VercelRes;
+  json: (body: unknown) => void;
+};
 
-  try {
-    const { password, token } = gateFromEnv();
-    if (!safeEqual(submitted, password)) {
-      return json(401, { error: 'invalid' });
+function submittedPassword(body: unknown) {
+  if (typeof body === 'string') {
+    try {
+      return String(JSON.parse(body).password ?? '').trim();
+    } catch {
+      return '';
     }
-    return json(200, { unlocked: true }, gateCookie(token));
-  } catch {
-    return json(500, { error: 'unconfigured' });
   }
+  if (body && typeof body === 'object' && 'password' in body) {
+    return String((body as { password?: string }).password ?? '').trim();
+  }
+  return '';
+}
+
+export default function handler(req: VercelReq, res: VercelRes) {
+  res.setHeader('Cache-Control', 'no-store');
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'method' });
+    return;
+  }
+
+  const password = envPassword();
+  if (!password) {
+    res.status(500).json({ error: 'unconfigured' });
+    return;
+  }
+
+  const submitted = submittedPassword(req.body);
+  if (!safeEqual(submitted, password)) {
+    res.status(401).json({ error: 'invalid' });
+    return;
+  }
+
+  res.setHeader('Set-Cookie', gateCookie(cookieToken(password)));
+  res.status(200).json({ unlocked: true });
 }

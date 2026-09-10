@@ -42,9 +42,14 @@ export function clearGateCookie() {
   return `${GATE_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`;
 }
 
+export function envPassword() {
+  return String(process.env.DEMO_PASSWORD ?? '').trim();
+}
+
 export function requirePassword(password: string | undefined) {
-  if (!password) {
+  const value = password?.trim();
+  if (!value) {
     throw new Error('DEMO_PASSWORD is not set. Add it to .env locally or as a Vercel environment variable.');
   }
-  return password;
+  return value;
 }

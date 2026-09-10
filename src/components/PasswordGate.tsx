@@ -40,8 +40,13 @@ export function PasswordGate({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       });
-      if (!res.ok) {
+      if (res.status === 401) {
         setError('Incorrect password');
+        setState('locked');
+        return;
+      }
+      if (!res.ok) {
+        setError('Could not reach the demo server. Try again.');
         setState('locked');
         return;
       }
