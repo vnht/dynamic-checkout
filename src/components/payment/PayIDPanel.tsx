@@ -30,9 +30,6 @@ export function PayIDPanel() {
         </p>
         <p>Usually received in under a minute.</p>
         <p>Check the recipient name before you send.</p>
-        <div className="status-banner status-banner--warning" role="note">
-          A PayID bank transfer may not have the same chargeback rights as a card payment.
-        </div>
         <p className="field__hint">
           Selecting PayID does not pull funds automatically. You complete the transfer in your bank
           app. Security checks can delay a transfer.
