@@ -1,39 +1,15 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Connect, Plugin } from 'vite';
+import {
+  clearGateCookie,
+  cookieToken,
+  gateCookie,
+  isUnlockedFromCookie,
+  requirePassword,
+  safeEqual,
+} from './gateAuth.ts';
 
-const COOKIE = 'dcal_gate';
-const MAX_AGE = 60 * 60 * 24 * 14;
-
-function cookieToken(secret: string) {
-  return createHmac('sha256', secret).update('dcal-unlocked').digest('hex');
-}
-
-function safeEqual(left: string, right: string) {
-  const a = Buffer.from(left);
-  const b = Buffer.from(right);
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
-}
-
-function parseCookies(header?: string) {
-  const out: Record<string, string> = {};
-  if (!header) return out;
-  for (const part of header.split(';')) {
-    const cut = part.indexOf('=');
-    if (cut === -1) continue;
-    const key = part.slice(0, cut).trim();
-    const value = part.slice(cut + 1).trim();
-    if (key) out[key] = decodeURIComponent(value);
-  }
-  return out;
-}
-
-function isUnlocked(req: Connect.IncomingMessage, token: string) {
-  const got = parseCookies(req.headers.cookie)[COOKIE];
-  return Boolean(got && safeEqual(got, token));
-}
-
-function readBody(req: Connect.IncomingMessage) {
+function readBody(req: IncomingMessage) {
   return new Promise<string>((resolve, reject) => {
     const chunks: Buffer[] = [];
     req.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
@@ -42,25 +18,21 @@ function readBody(req: Connect.IncomingMessage) {
   });
 }
 
-function json(res: Connect.ServerResponse, status: number, body: unknown) {
+function json(res: ServerResponse, status: number, body: unknown) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Cache-Control', 'no-store');
   res.end(JSON.stringify(body));
 }
 
-export function demoGatePlugin(password: string | undefined): Plugin {
-  if (!password) {
-    throw new Error('DEMO_PASSWORD is not set. Add it to .env on the server.');
-  }
-
+function createMiddleware(password: string): Connect.NextHandleFunction {
   const token = cookieToken(password);
 
-  const middleware: Connect.NextHandleFunction = async (req, res, next) => {
+  return async (req, res, next) => {
     const url = req.url?.split('?')[0] ?? '';
 
     if (url === '/api/auth/session' && req.method === 'GET') {
-      json(res, 200, { unlocked: isUnlocked(req, token) });
+      json(res, 200, { unlocked: isUnlockedFromCookie(req.headers.cookie, token) });
       return;
     }
 
@@ -78,30 +50,29 @@ export function demoGatePlugin(password: string | undefined): Plugin {
         return;
       }
 
-      res.setHeader(
-        'Set-Cookie',
-        `${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${MAX_AGE}`,
-      );
+      res.setHeader('Set-Cookie', gateCookie(token));
       json(res, 200, { unlocked: true });
       return;
     }
 
     if (url === '/api/auth/logout' && req.method === 'POST') {
-      res.setHeader('Set-Cookie', `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
+      res.setHeader('Set-Cookie', clearGateCookie());
       json(res, 200, { unlocked: false });
       return;
     }
 
     next();
   };
+}
 
+export function demoGatePlugin(password: string | undefined): Plugin {
   return {
     name: 'demo-gate',
     configureServer(server) {
-      server.middlewares.use(middleware);
+      server.middlewares.use(createMiddleware(requirePassword(password)));
     },
     configurePreviewServer(server) {
-      server.middlewares.use(middleware);
+      server.middlewares.use(createMiddleware(requirePassword(password)));
     },
   };
 }
