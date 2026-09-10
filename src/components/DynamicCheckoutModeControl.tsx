@@ -105,7 +105,7 @@ export function DynamicCheckoutModeControl({ variant = 'light' }: { variant?: 'l
             </p>
             <p className={`dc-why__outcome${on ? ' is-on' : ' is-ranked'}`}>
               {on
-                ? 'We rank the rails, then incentivise the 42. We gain them back. The other 58 stay as they are.'
+                ? 'We rank the rails, then incentivise the 42 who would otherwise churn. A targeted offer meets them at checkout. The other 58 stay as they are, with no extra offer.'
                 : 'We rank the rails so each shopper sees the method that fits them first. The 58 convert on preference. The 42 still get a ranked checkout.'}
             </p>
           </div>

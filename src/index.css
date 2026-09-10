@@ -78,6 +78,78 @@ textarea {
   flex-direction: column;
 }
 
+.gate {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  background:
+    radial-gradient(70% 45% at 50% 0%, rgba(0, 191, 255, 0.22), transparent 58%),
+    #05124f;
+}
+
+.gate__stage {
+  width: min(100%, 26rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gate__hero {
+  width: 100%;
+  margin: 0 0 1.25rem;
+  color: var(--hc-white);
+  text-align: center;
+}
+
+.gate__logo {
+  display: block;
+  height: 1.35rem;
+  width: auto;
+  margin: 0 auto 1.25rem;
+}
+
+.gate__kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hc-cyan);
+}
+
+.gate__title {
+  margin: 0 0 0.45rem;
+  font-size: clamp(1.7rem, 3vw, 2.2rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.gate__lede {
+  margin: 0 auto;
+  max-width: 22rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.gate__card {
+  width: 100%;
+  padding: 1.15rem 1.15rem 1.2rem;
+  border-radius: 16px;
+  background: var(--hc-white);
+  box-shadow: var(--hc-shadow);
+}
+
+.gate__card .field {
+  margin-bottom: 0.85rem;
+}
+
+.gate__card .field__error {
+  margin: -0.35rem 0 0.85rem;
+}
+
 .demo-header {
   position: sticky;
   top: 0;
@@ -1384,8 +1456,9 @@ textarea {
 
 .dc-mode__catalog .payment-row__logo,
 .dc-mode__catalog .payment-row__logo img {
-  width: 28px;
-  height: 28px;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
 }
 
 .dc-mode__plain figcaption {
@@ -3663,6 +3736,11 @@ textarea {
     bottom: calc(0.75rem + env(safe-area-inset-bottom));
   }
 
+  .demo-toolbar__toggle {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
   .app-shell:has(.sticky-bar) .demo-toolbar {
     bottom: calc(var(--sticky-bar-h) + 0.5rem + env(safe-area-inset-bottom));
   }
@@ -3693,6 +3771,7 @@ textarea {
 
   .dc-mode__lede {
     margin-bottom: 0.65rem !important;
+    min-height: 4.2em;
     font-size: 0.72rem !important;
   }
 
@@ -3746,8 +3825,27 @@ textarea {
   }
 
   .dc-why__outcome {
+    min-height: 5.6em;
     padding: 0.45rem 0.5rem;
     font-size: 0.65rem !important;
+  }
+
+  .dc-mode__catalog {
+    gap: 0.18rem;
+  }
+
+  .dc-mode__catalog li {
+    min-height: 1.7rem;
+    padding: 0.1rem 0.45rem;
+    font-size: 0.68rem;
+  }
+
+  .dc-mode__plain {
+    gap: 0.25rem;
+  }
+
+  .dc-mode__plain figcaption {
+    font-size: 0.62rem;
   }
 
   .dc-mode__card {
