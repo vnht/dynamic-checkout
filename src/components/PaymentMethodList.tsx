@@ -13,8 +13,9 @@ import { QrisPanel } from './payment/QrisPanel';
 import { WalletPayPanel } from './payment/WalletPayPanel';
 
 export function PaymentMethodList() {
-  const { paymentOptions, selectMethod, selectedMethod, overridden } = useDemo();
-  const recommended = paymentOptions.find((o) => o.rank === 1);
+  const { paymentOptions, selectMethod, selectedMethod, overridden, checkoutMode } = useDemo();
+  const ranked = checkoutMode !== 'normal';
+  const recommended = ranked ? paymentOptions.find((o) => o.rank === 1) : undefined;
   const others = paymentOptions.filter((o) => o.rank !== 1);
   const selectedIsOther = Boolean(recommended && selectedMethod !== recommended.id);
   const [othersOpen, setOthersOpen] = useState(selectedIsOther || overridden);
@@ -93,21 +94,26 @@ export function PaymentMethodList() {
         aria-label="Payment methods"
         onKeyDown={onKeyNav}
       >
-        {recommended && renderRow(recommended)}
-
-        <details
-          className="payment-others"
-          open={othersOpen}
-          onToggle={(e) => setOthersOpen((e.target as HTMLDetailsElement).open)}
-        >
-          <summary className="payment-others__summary">
-            <span>Other methods</span>
-            <span className="payment-others__count">
-              {others.map((o) => o.label).join(' · ')}
-            </span>
-          </summary>
-          <div className="payment-others__list">{others.map(renderRow)}</div>
-        </details>
+        {ranked ? (
+          <>
+            {recommended && renderRow(recommended)}
+            <details
+              className="payment-others"
+              open={othersOpen}
+              onToggle={(e) => setOthersOpen((e.target as HTMLDetailsElement).open)}
+            >
+              <summary className="payment-others__summary">
+                <span>Other methods</span>
+                <span className="payment-others__count">
+                  {others.map((o) => o.label).join(' · ')}
+                </span>
+              </summary>
+              <div className="payment-others__list">{others.map(renderRow)}</div>
+            </details>
+          </>
+        ) : (
+          paymentOptions.map(renderRow)
+        )}
       </div>
       <p className="secure-note">Your payment details are encrypted and securely processed.</p>
     </>

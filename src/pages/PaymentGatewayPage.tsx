@@ -19,6 +19,7 @@ export function PaymentGatewayPage() {
     contact,
     delivery,
     currency,
+    checkoutMode,
     setFieldErrors,
   } = useDemo();
   const navigate = useNavigate();
@@ -74,7 +75,7 @@ export function PaymentGatewayPage() {
           </section>
         </div>
 
-        <CustomerInsightPanel />
+        {checkoutMode !== 'normal' && <CustomerInsightPanel />}
       </div>
     </div>
   );

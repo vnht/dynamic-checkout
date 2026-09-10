@@ -1,0 +1,10 @@
+
+
+
+<script type="text/javascript">
+	window.dataLayer = window.dataLayer || [];
+	window.dataLayer.push({
+	    'event': 'error-page-view',
+		'type of error':'404 Error'
+	});
+</script>

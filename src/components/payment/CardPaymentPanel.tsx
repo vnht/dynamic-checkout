@@ -51,6 +51,7 @@ export function CardPaymentPanel() {
             <img className="network-mark-logo" src="/payments/visa.svg" alt="Visa" />
             <img className="network-mark-logo" src="/payments/mastercard.svg" alt="Mastercard" />
             <img className="network-mark-logo" src="/payments/amex.svg" alt="American Express" />
+            <img className="network-mark-logo" src="/payments/jcb.svg" alt="JCB" />
           </div>
           <p className="field__hint">
             Demo success: 4242 4242 4242 4242 · Demo decline: 4000 0000 0000 0002

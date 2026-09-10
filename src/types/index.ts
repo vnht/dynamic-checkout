@@ -53,7 +53,7 @@ export type PaymentStatus =
 
 export type AppScreen = 'checkout' | 'payment' | 'confirmation';
 
-export type CheckoutMode = 'standard' | 'cashback';
+export type CheckoutMode = 'normal' | 'dynamic' | 'cashback';
 
 export type PayToIdentifierType = 'mobile' | 'email' | 'bsb';
 

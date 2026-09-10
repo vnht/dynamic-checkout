@@ -58,9 +58,14 @@ import type {
   ShopperScenario,
 } from '../types';
 
+function normalizeCheckoutMode(value: string | null): CheckoutMode {
+  if (value === 'cashback') return 'cashback';
+  if (value === 'normal') return 'normal';
+  return 'dynamic';
+}
+
 function loadCheckoutMode(): CheckoutMode {
-  const value = localStorage.getItem(STORAGE_KEYS.checkoutMode);
-  return value === 'cashback' ? 'cashback' : 'standard';
+  return normalizeCheckoutMode(sessionStorage.getItem(STORAGE_KEYS.checkoutMode));
 }
 
 function loadConsentRecord(): PromotionalConsentRecord | null {
@@ -170,7 +175,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(
     savedChoice?.scenario === initialScenario
       ? savedChoice.method
-      : defaultMethodForScenario(initialScenario),
+      : defaultMethodForScenario(initialScenario, loadCheckoutMode()),
   );
   const [overridden, setOverridden] = useState(
     savedChoice?.scenario === initialScenario ? savedChoice.overridden : false,
@@ -208,7 +213,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const instalment = Math.round((amountDue / 4) * 100) / 100;
   const cartEmpty = isCartEmpty(items);
 
-  const recommendedMethod = defaultMethodForScenario(scenario);
+  const recommendedMethod = defaultMethodForScenario(scenario, checkoutMode);
 
   const paymentOptions = useMemo(
     () =>
@@ -253,7 +258,12 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   }, [scenario]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.checkoutMode, checkoutMode);
+    const next = normalizeCheckoutMode(checkoutMode);
+    if (next !== checkoutMode) {
+      setCheckoutModeState(next);
+      return;
+    }
+    sessionStorage.setItem(STORAGE_KEYS.checkoutMode, checkoutMode);
   }, [checkoutMode]);
 
   useEffect(() => {
@@ -262,13 +272,16 @@ export function DemoProvider({ children }: { children: ReactNode }) {
 
   const setCheckoutMode = (mode: CheckoutMode) => {
     setCheckoutModeState(mode);
-    if (mode === 'standard') {
+    const method = defaultMethodForScenario(scenario, mode);
+    setSelectedMethod(method);
+    setOverridden(false);
+    if (mode === 'cashback') {
+      setApplyCashback(hasCashbackBalance(scenario));
+    } else {
       setApplyCashback(false);
       setPromotionalConsent(null);
       localStorage.removeItem(STORAGE_KEYS.promotionalConsent);
       localStorage.removeItem(STORAGE_KEYS.agenticGrowthHandoff);
-    } else {
-      setApplyCashback(hasCashbackBalance(scenario));
     }
   };
 
@@ -341,7 +354,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     clearCheckoutDraft();
     setScenarioState(next);
     setOverridden(false);
-    const method = defaultMethodForScenario(next);
+    const method = defaultMethodForScenario(next, checkoutMode);
     setSelectedMethod(method);
     setContactState({ ...profile.contact });
     setDeliveryState({ ...profile.delivery });
@@ -378,7 +391,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   };
 
   const selectMethod = (method: PaymentMethod) => {
-    const isOverride = method !== recommendedMethod;
+    const isOverride = checkoutMode !== 'normal' && method !== recommendedMethod;
     setSelectedMethod(method);
     setOverridden(isOverride);
     setStatusMessage(null);
@@ -747,7 +760,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     setContactState({ ...profile.contact });
     setDeliveryState({ ...profile.delivery });
     setFieldErrors({});
-    setSelectedMethod(defaultMethodForScenario('recognised'));
+    setSelectedMethod(defaultMethodForScenario('recognised', 'dynamic'));
     setOverridden(false);
     setCard({ ...profile.cardPrefill });
     setPayToIdType('mobile');
@@ -756,7 +769,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     resetPaymentSession();
     setAnalytics([]);
     setPromotionalConsent(null);
-    setCheckoutModeState('standard');
+    setCheckoutModeState('dynamic');
     setApplyCashback(false);
     rankedOnce.current = false;
     clearCheckoutDraft();

@@ -80,7 +80,7 @@ export function OrderSummary({
 
       {showMethods && (
         <div className="method-preview" aria-label="Accepted payment methods">
-          <img className="method-chip-logo" src="/payments/card.svg" alt="Card" />
+          <img className="method-chip-logo" src="/payments/card.svg" alt="Visa, Mastercard, American Express and JCB" />
           {currency === 'IDR' ? (
             <>
               <img className="method-chip-logo" src="/payments/qris.svg" alt="QRIS" />
@@ -88,13 +88,13 @@ export function OrderSummary({
             </>
           ) : currency === 'USD' ? (
             <>
-              <img className="method-chip-logo" src="/payments/klarna.svg" alt="Klarna" />
+              <img className="method-chip-logo" src="/payments/klarna.png" alt="Klarna" />
               <img className="method-chip-logo" src="/payments/paybybank.svg" alt="Pay by bank" />
-              <img className="method-chip-logo method-chip-logo--wide" src="/payments/paypal.svg" alt="PayPal" />
+              <img className="method-chip-logo" src="/payments/paypal-mark.png" alt="PayPal" />
             </>
           ) : (
             <>
-              <img className="method-chip-logo" src="/payments/afterpay.svg" alt="Afterpay" />
+              <img className="method-chip-logo" src="/payments/afterpay.png" alt="Afterpay" />
               <img className="method-chip-logo" src="/payments/payid.svg" alt="PayID" />
               <img className="method-chip-logo" src="/payments/payto.svg" alt="PayTo" />
             </>

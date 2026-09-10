@@ -1,13 +1,13 @@
 import type { PaymentMethod } from '../types';
 
 const LOGOS: Record<PaymentMethod, { src: string; alt: string }> = {
-  card: { src: '/payments/card.svg', alt: 'Visa, Mastercard and American Express' },
-  afterpay: { src: '/payments/afterpay.svg', alt: 'Afterpay' },
-  klarna: { src: '/payments/klarna.svg', alt: 'Klarna' },
+  card: { src: '/payments/card.svg', alt: 'Visa, Mastercard, American Express and JCB' },
+  afterpay: { src: '/payments/afterpay.png', alt: 'Afterpay' },
+  klarna: { src: '/payments/klarna.png', alt: 'Klarna' },
   payto: { src: '/payments/payto.svg', alt: 'PayTo' },
   payid: { src: '/payments/payid.svg', alt: 'PayID' },
   paybybank: { src: '/payments/paybybank.svg', alt: 'Pay by bank' },
-  paypal: { src: '/payments/paypal.svg', alt: 'PayPal' },
+  paypal: { src: '/payments/paypal-mark.png', alt: 'PayPal' },
   applepay: { src: '/payments/applepay.svg', alt: 'Apple Pay' },
   googlepay: { src: '/payments/googlepay.svg', alt: 'Google Pay' },
   qris: { src: '/payments/qris.svg', alt: 'QRIS' },

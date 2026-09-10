@@ -10,7 +10,7 @@ import {
   US_SHOPPERS,
   type ShopperCardModel,
 } from '../lib/shopperCard';
-import type { ShopperScenario } from '../types';
+import type { CheckoutMode, ShopperScenario } from '../types';
 
 const MARKET_FLAG: Record<string, { src: string; alt: string }> = {
   'United States': { src: '/flags/us.svg', alt: 'United States' },
@@ -34,7 +34,7 @@ function ShopperAttributes({
   checkoutMode,
 }: {
   shopper: ShopperCardModel;
-  checkoutMode: 'standard' | 'cashback';
+  checkoutMode: CheckoutMode;
 }) {
   return (
     <dl className="shopper-card__attrs">
